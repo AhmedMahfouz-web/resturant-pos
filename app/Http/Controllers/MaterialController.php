@@ -27,6 +27,7 @@ class MaterialController extends Controller
             'name' => 'required|string|max:255',
             'quantity' => 'required|numeric|min:0',
             'unit' => 'required|string|max:10',
+            'purchase_price' => 'required|numeric ',
         ]);
 
         $material = Material::create($validated);

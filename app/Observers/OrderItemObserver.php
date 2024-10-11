@@ -27,6 +27,7 @@ class OrderItemObserver
      */
     public function updated(OrderItem $orderItem): void
     {
+        
         $this->updateOrderTotals($orderItem->order_id);
     }
 
