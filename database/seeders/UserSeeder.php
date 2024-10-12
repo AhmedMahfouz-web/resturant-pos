@@ -16,7 +16,14 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create();
         $usedCodes = [];
-
+        User::create([
+            'first_name' => 'Admin',
+            'last_name' => 'Admin',
+            'username' => 'admin',
+            'email' => 'admin@admin.com',
+            'password' => 'password',
+            'login_code' => 1234,
+        ]);
         for ($i = 0; $i < 10; $i++) {
             // Generate unique 4-digit code
             do {
