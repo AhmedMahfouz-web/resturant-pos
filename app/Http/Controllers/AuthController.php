@@ -22,7 +22,7 @@ class AuthController extends Controller
 
 
             if (!$user) {
-                return response()->json(['error' => 'Unauthorized'], 401);
+                return response()->json(['error' => 'Wrong credentials'], 401);
             }
 
             // Generate token for the user
@@ -65,6 +65,8 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
+            'message' => 'Login successful',
+            'user' => auth()->user(),
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 600
