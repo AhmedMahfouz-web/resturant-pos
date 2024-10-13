@@ -7,6 +7,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecipeController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -41,18 +43,29 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::delete('/{id}', [UserController::class, 'deleteUser']);  // Delete a user
     });
 
+    Route::prefix('roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index']);              // Get all roles
+        Route::get('/create', [RoleController::class, 'createRole']);      // Create a new role
+        Route::post('/', [RoleController::class, 'storeRole']);           // Create a new role
+        Route::get('/{id}', [RoleController::class, 'editRole']);         // Update role details
+        Route::put('/{id}', [RoleController::class, 'updateRole']);       // Update role details
+        Route::delete('/{id}', [RoleController::class, 'deleteRole']);    // Delete a role
+    });
+
     Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);               // Get all products
-        Route::post('/', [ProductController::class, 'createProduct']);       // Create a new product
-        Route::put('/{id}', [ProductController::class, 'updateProduct']);    // Update a product
-        Route::delete('/{id}', [ProductController::class, 'deleteProduct']); // Delete a product
+        Route::get('/', [ProductController::class, 'index']);                 // Get all products
+        Route::post('/', [ProductController::class, 'storeProduct']);         // Create a new product
+        Route::post('/create', [ProductController::class, 'createProduct']);  // Create a new product
+        Route::put('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
+        Route::delete('/{id}', [ProductController::class, 'deleteProduct']);  // Delete a product
     });
 
     Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);               // Get all categories
-        Route::post('/', [CategoryController::class, 'createCategory']);     // Create a new category
-        Route::put('/{id}', [CategoryController::class, 'updateCategory']);  // Update a category
-        Route::delete('/{id}', [CategoryController::class, 'deleteCategory']); // Delete a category
+        Route::get('/', [CategoryController::class, 'index']);                      // Get all categories
+        Route::post('/', [CategoryController::class, 'storeCategory']);             // Create a new category
+        Route::post('/create', [CategoryController::class, 'createCategory']);      // Create a new category
+        Route::put('/{id}', [CategoryController::class, 'updateCategory']);         // Update a category
+        Route::delete('/{id}', [CategoryController::class, 'deleteCategory']);      // Delete a category
     });
 
     Route::prefix('orders')->group(function () {
@@ -97,5 +110,13 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::post('', [RecipeController::class, 'store']);
         Route::put('/{id}', [RecipeController::class, 'update']);
         Route::delete('/{id}', [RecipeController::class, 'destroy']);
+    });
+
+    Route::prefix('shift')->group(function () {
+        Route::get('', [ShiftController::class, 'index']);
+        Route::get('/{id}', [ShiftController::class, 'show']);
+        Route::post('', [ShiftController::class, 'store']);
+        Route::put('/{id}', [ShiftController::class, 'update']);
+        Route::delete('/{id}', [ShiftController::class, 'destroy']);
     });
 });

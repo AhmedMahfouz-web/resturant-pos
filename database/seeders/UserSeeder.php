@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create();
         $usedCodes = [];
-        User::create([
+        $admin = User::create([
             'first_name' => 'Admin',
             'last_name' => 'Admin',
             'username' => 'admin',
@@ -24,6 +24,8 @@ class UserSeeder extends Seeder
             'password' => 'password',
             'login_code' => 1234,
         ]);
+        $admin->assignRole('Admin');
+        $roles = ['Manager', 'Cashier', 'Waiter', 'Accountant'];
         for ($i = 0; $i < 10; $i++) {
             // Generate unique 4-digit code
             do {
@@ -31,8 +33,9 @@ class UserSeeder extends Seeder
             } while (in_array($loginCode, $usedCodes));
 
             $usedCodes[] = $loginCode;
+            $role = $roles[array_rand($roles)];
 
-            User::create([
+            $user = User::create([
                 'first_name' => $faker->name,
                 'last_name' => $faker->name,
                 'username' => $faker->name,
@@ -40,6 +43,7 @@ class UserSeeder extends Seeder
                 'password' => 'password',
                 'login_code' => $loginCode,
             ]);
+            $user->assignRole($role);
         }
     }
 }

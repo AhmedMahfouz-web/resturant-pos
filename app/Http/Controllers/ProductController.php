@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -13,8 +14,15 @@ class ProductController extends Controller
         return response()->json(Product::all());
     }
 
+    public function createProduct()
+    {
+        $categories = Category::all();
+
+        return response()->json(['categories' => $categories]);
+    }
+
     // Add a new product
-    public function createProduct(Request $request)
+    public function storeProduct(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
