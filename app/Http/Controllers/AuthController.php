@@ -33,7 +33,7 @@ class AuthController extends Controller
             if ($shift) {
                 return $this->respondWithToken($token, $shift);
             } else {
-                return response()->json(['error' => 'Open Shift first!']);
+                return response()->json(['error' => 'Open Shift first!', 401]);
             }
         }
 
