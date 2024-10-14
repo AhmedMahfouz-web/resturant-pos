@@ -28,7 +28,9 @@ class AuthController extends Controller
             // Generate token for the user
             $token = auth()->login($user);
             auth()->setTTL(60 * 60 * 60 * 6000);
-            return $this->respondWithToken($token);
+            $shift = new ShiftController();
+            $shift = $shift->startShift($user);
+            return $this->respondWithToken($token, $shift);
         }
 
         // Default to email login with password
@@ -62,13 +64,13 @@ class AuthController extends Controller
     }
 
     // Helper function to respond with token
-    protected function respondWithToken($token)
+    protected function respondWithToken($token, $shift)
     {
         return response()->json([
             'message' => 'Login successful',
             'user' => auth()->user(),
             'role' => auth()->user()->roles[0]->name,
-            "can_start_shift" => auth()->user()->can('start shift'),
+            'shift' => $shift,
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL()
