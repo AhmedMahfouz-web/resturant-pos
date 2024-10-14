@@ -77,7 +77,7 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'user' => auth()->user(),
             'role' => auth()->user()->roles[0]->name,
-            'permissions' => auth()->user()->permissions[0]->name,
+            'permissions' => auth()->user()->permissions,
             'shift' => $shift,
             'access_token' => $token,
             'token_type' => 'bearer',
