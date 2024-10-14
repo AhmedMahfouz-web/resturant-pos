@@ -18,7 +18,10 @@ class AuthController extends Controller
     {
         if ($request->has('login_code')) {
             // Find the user by login_code
-            $user = User::where('login_code', $request->login_code)->first();
+            $user = User::where('login_code', $request->login_code)
+                ->select('first_name', 'last_name', 'username', 'id')
+                ->without(['roles'])
+                ->first();
 
 
             if (!$user) {
@@ -27,11 +30,10 @@ class AuthController extends Controller
 
             // Generate token for the user
             $token = auth()->login($user);
-            auth()->setTTL(60 * 60 * 60 * 6000);
-            $shift = new ShiftController();
+            $shift = app(ShiftController::class);
             $shift = $shift->startShift($user);
             if ($shift) {
-                return $this->respondWithToken($token, $shift);
+                return $this->respondWithToken($token, $shift, $user);
             } else {
                 return response()->json(['error' => 'Open Shift first!'], 401);
             }
@@ -46,6 +48,7 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
+
 
     // Get the authenticated user
     public function me()
@@ -71,17 +74,17 @@ class AuthController extends Controller
     }
 
     // Helper function to respond with token
-    protected function respondWithToken($token, $shift)
+    protected function respondWithToken($token, $shift, $user)
     {
         return response()->json([
             'message' => 'Login successful',
-            'user' => auth()->user(),
-            'role' => auth()->user()->roles[0]->name,
-            'permissions' => auth()->user()->permissions,
+            'user' => $user->makeHidden(['roles', 'permissions']),
+            'role' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
             'shift' => $shift,
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL()
-        ]);
+        ], 200);
     }
 }

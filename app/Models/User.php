@@ -30,6 +30,7 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
+    // protected $appends = ['permission'];
     /**
      * The attributes that should be cast.
      *
@@ -78,4 +79,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Shift::class);
     }
+
+    // public function getPermissionAttribute()
+    // {
+    //     return $this->getAllPermissions();
+    // }
 }
