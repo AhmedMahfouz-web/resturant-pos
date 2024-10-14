@@ -70,6 +70,6 @@ class UserController extends Controller
     // List all users
     public function index()
     {
-        return response()->json(User::all());
+        return response()->json(User::with('roles')->get());
     }
 }
