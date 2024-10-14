@@ -68,9 +68,10 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'user' => auth()->user(),
             'role' => auth()->user()->roles[0]->name,
+            "can_start_shift" => auth()->user()->can('start shift'),
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 600
+            'expires_in' => auth()->factory()->getTTL()
         ]);
     }
 }
