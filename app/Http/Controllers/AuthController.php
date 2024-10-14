@@ -57,8 +57,10 @@ class AuthController extends Controller
     public function logout()
     {
         auth()->logout();
-        $shift = new ShiftController();
-        $shift = $shift->endShift(auth()->user());
+        if (auth()->user()->can('end shift')) {
+            $shift = new ShiftController();
+            $shift = $shift->endShift(auth()->user());
+        }
         return response()->json(['message' => 'Successfully logged out']);
     }
 
