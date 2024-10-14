@@ -38,7 +38,9 @@ Route::group(['middleware' => 'jwt'], function () {
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);              // Get all users
-        Route::post('/', [UserController::class, 'createUser']);        // Create a new user
+        Route::get('/create', [UserController::class, 'createUser']);      // Create a new user
+        Route::post('/', [UserController::class, 'storeUser']);        // Create a new user
+        Route::get('/{id}', [UserController::class, 'editUser']);       // Edit a user
         Route::put('/{id}', [UserController::class, 'updateUser']);     // Update user details
         Route::delete('/{id}', [UserController::class, 'deleteUser']);  // Delete a user
     });

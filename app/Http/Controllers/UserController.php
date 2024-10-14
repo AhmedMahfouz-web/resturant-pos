@@ -5,13 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function createUser(Request $request)
+
+    public function createUser()
+    {
+        $roles = Role::all();
+        return response()->json(['roles' => $roles]);
+    }
+
+    public function storeUser(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -27,7 +35,16 @@ class UserController extends Controller
             'login_code' => $request->login_code,
         ]);
 
+        $user->assignRole($request->role);
+
         return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
+    }
+
+    public function editUser($id)
+    {
+        $user = User::findOrFail($id);
+        $roles = Role::all();
+        return response()->json(['user' => $user, 'roles' => $roles]);
     }
 
     // Admin can update user info
