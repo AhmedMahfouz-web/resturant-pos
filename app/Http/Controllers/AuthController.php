@@ -30,7 +30,11 @@ class AuthController extends Controller
             auth()->setTTL(60 * 60 * 60 * 6000);
             $shift = new ShiftController();
             $shift = $shift->startShift($user);
-            return $this->respondWithToken($token, $shift);
+            if ($shift) {
+                return $this->respondWithToken($token, $shift);
+            } else {
+                return response()->json(['error' => 'Open Shift first!']);
+            }
         }
 
         // Default to email login with password
