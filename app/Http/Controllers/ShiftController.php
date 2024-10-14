@@ -25,4 +25,13 @@ class ShiftController extends Controller
             }
         }
     }
+
+    public function endShift($user)
+    {
+        $shift = Shift::where('user_id', $user->id)->where('end_time', null)->first();
+        if ($shift) {
+            $shift->end_time = now();
+            $shift->save();
+        }
+    }
 }
