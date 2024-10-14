@@ -140,9 +140,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'edit discount',
                 'delete discount',
             ],
-            'Waiter' => [
-                'start shift',
-            ],
+            'Waiter' => [],
             'Cashier' => [
                 'start shift',
                 'place order',
