@@ -20,7 +20,7 @@ class AuthController extends Controller
             // Find the user by login_code
             $user = User::where('login_code', $request->login_code)
                 ->select('first_name', 'last_name', 'username', 'id')
-                ->without(['roles'])
+                ->with(['roles.permissions:name'])
                 ->first();
 
 
@@ -60,8 +60,8 @@ class AuthController extends Controller
     public function logout()
     {
         if (auth()->user()->can('end shift')) {
-            $shift = new ShiftController();
-            $shift = $shift->endShift(auth()->user());
+            $shift = app(ShiftController::class);
+            $shift->endShift();
         }
         auth()->logout();
         return response()->json(['message' => 'Successfully logged out']);
@@ -78,9 +78,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user->makeHidden(['roles', 'permissions']),
-            'role' => $user->getRoleNames(),
-            'permissions' => $user->getAllPermissions()->pluck('name'),
+            'user' => $user,
             'shift' => $shift,
             'access_token' => $token,
             'token_type' => 'bearer',

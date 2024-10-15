@@ -13,4 +13,9 @@ class Shift extends Model
         'start_time',
         'end_time',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

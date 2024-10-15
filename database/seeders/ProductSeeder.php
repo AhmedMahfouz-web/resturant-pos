@@ -20,18 +20,19 @@ class ProductSeeder extends Seeder
         $faker->addProvider(new \FakerRestaurant\Provider\en_US\Restaurant($faker));
         $categories = Category::all();
 
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < 200; $i++) {
             $product = Product::create([
                 'name' => $faker->foodName(),
                 'price' => $faker->randomFloat(2, 1, 20), // Price between $1 and $20
                 'description' => $faker->sentence,
-                'category_id' => $categories->random()->id
+                'category_id' => $categories->random()->id,
+                'image' => $faker->imageUrl(360, 360, null, true)
             ]);
 
             // Assign random recipes to each product
             $recipes = Recipe::inRandomOrder()->take(rand(1, 2))->get();
             foreach ($recipes as $recipe) {
-                $product->recipes()->attach($recipe->id);
+                $product->recipe()->attach($recipe->id);
             }
         }
     }
