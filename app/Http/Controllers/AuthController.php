@@ -20,7 +20,7 @@ class AuthController extends Controller
             // Find the user by login_code
             $user = User::where('login_code', $request->login_code)
                 ->select('first_name', 'last_name', 'username', 'id')
-                ->with(['roles.permissions:name'])
+                ->with(['roles:name'])
                 ->first();
 
 
