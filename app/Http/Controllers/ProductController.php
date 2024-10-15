@@ -11,7 +11,7 @@ class ProductController extends Controller
     // List all products
     public function index()
     {
-        $product = Product::all();
+        $product = Product::with('category:name');
         return response()->json($product);
     }
 

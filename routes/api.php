@@ -115,10 +115,6 @@ Route::group(['middleware' => 'jwt'], function () {
     });
 
     Route::prefix('shift')->group(function () {
-        Route::get('', [ShiftController::class, 'index']);
-        Route::get('/{id}', [ShiftController::class, 'show']);
-        Route::post('', [ShiftController::class, 'store']);
-        Route::put('/{id}', [ShiftController::class, 'update']);
-        Route::delete('/{id}', [ShiftController::class, 'destroy']);
+        Route::get('{shiftId}/details', [ShiftController::class, 'getShiftDetails']);
     });
 });
