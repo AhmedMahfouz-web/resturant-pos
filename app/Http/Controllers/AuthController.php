@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
 
 class AuthController extends Controller
 {
@@ -20,9 +21,14 @@ class AuthController extends Controller
             // Find the user by login_code
             $user = User::where('login_code', $request->login_code)
                 ->select('first_name', 'last_name', 'username', 'id')
-                ->with(['roles:name'])
+                ->with(['roles:id,name'])
                 ->first();
 
+            if ($user->can('start shift')) {
+                return "Hello";
+            } else {
+                return Permission::all();
+            }
 
             if (!$user) {
                 return response()->json(['error' => 'Wrong credentials'], 401);
