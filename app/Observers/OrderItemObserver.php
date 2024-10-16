@@ -18,7 +18,7 @@ class OrderItemObserver
         })->first();
         $quantityOrdered = $orderItem->quantity;
 
-        $this->decrementMaterials($product, $quantityOrdered);
+        // $this->decrementMaterials($product, $quantityOrdered);
         $this->updateOrderTotals($orderItem->order_id);
     }
 
@@ -27,7 +27,7 @@ class OrderItemObserver
      */
     public function updated(OrderItem $orderItem): void
     {
-        
+
         $this->updateOrderTotals($orderItem->order_id);
     }
 
@@ -69,6 +69,7 @@ class OrderItemObserver
             $charges = calculate_tax_and_service($totalAmount, $order->type);
 
             $order->update([
+                'sub_total' => $totalAmount,
                 'total_amount' => $charges['grand_total'],
                 'tax' => $charges['tax'],
                 'service' => $charges['service'],

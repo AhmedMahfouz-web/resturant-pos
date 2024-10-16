@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('shift_id')->references('id')->on('shifts')->onDelete('cascade');
             $table->string('guest')->nullable();
             $table->enum('status', ['live', 'completed', 'canceled']);
+            $table->decimal('sub_total', 10, 2);
             $table->decimal('total_amount', 10, 2);
             $table->decimal('discount', 10, 2)->nullable();
             $table->decimal('tax', 10, 2);

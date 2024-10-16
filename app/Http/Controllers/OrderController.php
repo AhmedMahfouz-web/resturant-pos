@@ -66,6 +66,7 @@ class OrderController extends Controller
             'tax' => $charges['tax'],
             'discount' => $charges['discount_value'],
             'service' => $charges['service'],
+            'total_amount' => $totalAmount,
             'total_amount' => $charges['grand_total'],
         ]);
 
@@ -77,7 +78,6 @@ class OrderController extends Controller
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
             ]);
-
         }
 
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecipeController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TableController;
@@ -117,4 +118,8 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::prefix('shift')->group(function () {
         Route::get('{shiftId}/details', [ShiftController::class, 'getShiftDetails']);
     });
+
+    Route::get('/reports/sales', [ReportController::class, 'salesReport']);
+    Route::get('/reports/inventory', [ReportController::class, 'inventoryReport']);
+    Route::get('/reports/user-activity', [ReportController::class, 'userActivityReport']);
 });
