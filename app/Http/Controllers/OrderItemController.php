@@ -25,6 +25,7 @@ class OrderItemController extends Controller
             'quantity' => $request->quantity,
         ]);
 
+
         return response()->json(['message' => 'OrderItemcx created successfully', 'order_item' => $orderItem], 201);
     }
 

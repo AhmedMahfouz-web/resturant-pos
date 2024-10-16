@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class MaterialController extends Controller
@@ -57,5 +58,21 @@ class MaterialController extends Controller
         $material->delete();
 
         return response()->json(['message' => 'Material deleted successfully']);
+    }
+
+    public function decrementMaterials(Product $product, $quantityOrdered)
+    {
+        
+        // Retrieve the recipe for the product
+        $recipe = $product->recipe;
+
+        // Loop through the materials in the recipe and decrement the quantities
+        foreach ($recipe->materials as $material) {
+            $materialUsed = $recipe->materials->find($material->id)->pivot->material_quantity;
+            $totalMaterialUsed = $materialUsed * $quantityOrdered; // Multiply by the number of products ordered
+
+            // Decrement the material's quantity
+            $material->decrement('quantity', $totalMaterialUsed);
+        }
     }
 }

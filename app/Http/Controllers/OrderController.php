@@ -78,27 +78,16 @@ class OrderController extends Controller
                 'quantity' => $item['quantity'],
             ]);
 
-            // $this->decrementMaterials($product, $item['quantity']);
         }
 
 
-        return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
+        return response()->json([
+            'success' => 'true',
+            'message' => 'Order created successfully',
+            'order' => $order
+        ], 201);
     }
 
-    protected function decrementMaterials(Product $product, $quantityOrdered)
-    {
-        // Retrieve the recipe for the product
-        $recipe = $product->recipe;
-
-        // Loop through the materials in the recipe and decrement the quantities
-        foreach ($recipe->materials as $material) {
-            $materialUsed = $recipe->materials->find($material->id)->pivot->material_quantity;
-            $totalMaterialUsed = $materialUsed * $quantityOrdered; // Multiply by the number of products ordered
-
-            // Decrement the material's quantity
-            $material->decrement('quantity', $totalMaterialUsed);
-        }
-    }
 
     // Update an order (e.g., add or remove items)
     public function updateOrder(Request $request, $id)

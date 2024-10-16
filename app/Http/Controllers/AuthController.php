@@ -21,14 +21,8 @@ class AuthController extends Controller
             // Find the user by login_code
             $user = User::where('login_code', $request->login_code)
                 ->select('first_name', 'last_name', 'username', 'id')
-                ->with(['roles:id,name'])
+                ->with(['roles.permissions:id,name'])
                 ->first();
-
-            if ($user->can('start shift')) {
-                return "Hello";
-            } else {
-                return Permission::all();
-            }
 
             if (!$user) {
                 return response()->json(['error' => 'Wrong credentials'], 401);

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('number');
             $table->integer('capacity')->nullable();
+            $table->boolean('is_free')->default(1);
             $table->timestamps();
         });
     }
