@@ -63,6 +63,7 @@ class OrderController extends Controller
             'code' => $newOrderId,
             'guest' => $request->guest,
             'table_id' => $request->table_id,
+            'status' => 'live',
             'tax' => $charges['tax'],
             'discount' => $charges['discount_value'],
             'service' => $charges['service'],
