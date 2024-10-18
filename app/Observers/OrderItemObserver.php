@@ -19,7 +19,7 @@ class OrderItemObserver
         $quantityOrdered = $orderItem->quantity;
 
         // $this->decrementMaterials($product, $quantityOrdered);
-        $this->updateOrderTotals($orderItem->order_id);
+        updateOrderTotals($orderItem->order_id);
     }
 
     /**
@@ -28,7 +28,7 @@ class OrderItemObserver
     public function updated(OrderItem $orderItem): void
     {
 
-        $this->updateOrderTotals($orderItem->order_id);
+        updateOrderTotals($orderItem->order_id);
     }
 
     /**
@@ -36,7 +36,7 @@ class OrderItemObserver
      */
     public function deleted(OrderItem $orderItem): void
     {
-        $this->updateOrderTotals($orderItem->order_id);
+        updateOrderTotals($orderItem->order_id);
     }
 
     /**
@@ -55,37 +55,5 @@ class OrderItemObserver
         //
     }
 
-    protected function updateOrderTotals($orderId)
-    {
-        $order = Order::find($orderId);
 
-        if ($order) {
-            // Recalculate the total amount
-            $totalAmount = $order->orderItems->sum(function ($item) {
-                return $item->product->price * $item->quantity;
-            });
-
-            // Use the helper function to calculate tax and service
-            $charges = calculate_tax_and_service($totalAmount, $order->type);
-
-            $order->update([
-                'sub_total' => $totalAmount,
-                'total_amount' => $charges['grand_total'],
-                'tax' => $charges['tax'],
-                'service' => $charges['service'],
-            ]);
-        }
-    }
-
-    protected function decrementMaterials($product, $quantityOrdered)
-    {
-        $recipe = $product->recipe->first();
-        foreach ($recipe->materials()->get() as $material) {
-            $materialUsed = $material->pivot->material_quantity;
-            $totalMaterialUsed = $materialUsed * $quantityOrdered;
-
-
-            $material->decrement('quantity', $totalMaterialUsed);
-        }
-    }
 }

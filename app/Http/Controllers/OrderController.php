@@ -10,19 +10,28 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    // Get all orders
     public function index()
     {
         return response()->json(Order::with('orderItems')->get());
     }
 
+    // Get live orders
     public function liveOrders()
     {
         $orders = Order::where('status', 'live')->with('orderItems')->get();
-
         return response()->json($orders);
     }
 
-    public function latestOrders()
+    // Get canceled orders
+    public function canceledOrders()
+    {
+        $orders = Order::where('status', 'canceled')->with('orderItems')->get();
+        return response()->json($orders);
+    }
+
+    // Get completed orders
+    public function completedOrders()
     {
         $orders = Order::where('status', 'completed')->with('orderItems')->latest();
 
@@ -39,14 +48,7 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $lastOrder = Order::whereDate('created_at', Carbon::today())->orderBy('created_at', 'desc')->first();
-
-        if ($lastOrder) {
-            $lastIncrement = (int) substr($lastOrder->code, -3);
-            $newIncrement = str_pad($lastIncrement + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newIncrement = '0001';
-        }
+        $newOrderId = $this->generate_new_order_id();
 
         $totalAmount = 0;
         foreach ($validated['items'] as $item) {
@@ -55,8 +57,6 @@ class OrderController extends Controller
         }
 
         $charges = calculate_tax_and_service($totalAmount, $request->type);
-
-        $newOrderId = date('Ydm') . '-' . $newIncrement;
 
         $order = Order::create([
             'user_id' => auth()->user()->id,
@@ -67,7 +67,7 @@ class OrderController extends Controller
             'tax' => $charges['tax'],
             'discount' => $charges['discount_value'],
             'service' => $charges['service'],
-            'total_amount' => $totalAmount,
+            'sub_total' => $totalAmount,
             'total_amount' => $charges['grand_total'],
         ]);
 
@@ -99,9 +99,39 @@ class OrderController extends Controller
     }
 
     // Delete an order
-    public function deleteOrder($id)
+    public function cancelOrder($id)
     {
-        Order::findOrFail($id)->delete();
-        return response()->json(['message' => 'Order deleted successfully']);
+        $order = Order::findOrFail($id);
+        $order->update(['status' => 'canceled']);
+
+        return response()->json(['message' => 'Order canceled successfully']);
+    }
+
+    // Add discount to order
+    public function discount(Request $request, $id)
+    {
+        $order = Order::find($id);
+        if (!$order) {
+            return response()->json([
+                'success' => 0,
+                'message' => 'Order not found'
+            ], 404);
+        }
+    }
+
+    // Generate ids for orders
+    private function generate_new_order_id()
+    {
+        $lastOrder = Order::whereDate('created_at', Carbon::today())->orderBy('created_at', 'desc')->first();
+
+        if ($lastOrder) {
+            $lastIncrement = (int) substr($lastOrder->code, -3);
+            $newIncrement = str_pad($lastIncrement + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $newIncrement = '0001';
+        }
+        $newOrderId =  date('Ydm') . '-' . $newIncrement;
+
+        return $newOrderId;
     }
 }

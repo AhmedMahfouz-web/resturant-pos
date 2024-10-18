@@ -30,14 +30,9 @@ class PaymentController extends Controller
             'payment_method_id' => $request->payment_method_id,
         ]);
 
-        $order->update([
-            'status' => 'completed',
-            'close_at' => now()
-        ]);
 
 
-        // Dispatch the job to decrement materials in the background
-        DecrementMaterials::dispatch($order);
+        // DecrementMaterials::dispatch($order);
 
         // Return response to the frontend
         return response()->json([

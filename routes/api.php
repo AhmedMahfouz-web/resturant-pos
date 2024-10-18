@@ -39,16 +39,16 @@ Route::group(['middleware' => 'jwt'], function () {
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']);              // Get all users
-        Route::get('/create', [UserController::class, 'createUser']);      // Create a new user
-        Route::post('/', [UserController::class, 'storeUser']);        // Create a new user
+        Route::get('/create', [UserController::class, 'createUser']);   // Create a new user
+        Route::post('/', [UserController::class, 'storeUser']);         // Create a new user
         Route::get('/{id}', [UserController::class, 'editUser']);       // Edit a user
         Route::put('/{id}', [UserController::class, 'updateUser']);     // Update user details
         Route::delete('/{id}', [UserController::class, 'deleteUser']);  // Delete a user
     });
 
     Route::prefix('roles')->group(function () {
-        Route::get('/', [RoleController::class, 'index']);              // Get all roles
-        Route::get('/create', [RoleController::class, 'createRole']);      // Create a new role
+        Route::get('/', [RoleController::class, 'index']);                // Get all roles
+        Route::get('/create', [RoleController::class, 'createRole']);     // Create a new role
         Route::post('/', [RoleController::class, 'storeRole']);           // Create a new role
         Route::get('/{id}', [RoleController::class, 'editRole']);         // Update role details
         Route::put('/{id}', [RoleController::class, 'updateRole']);       // Update role details
@@ -72,18 +72,20 @@ Route::group(['middleware' => 'jwt'], function () {
     });
 
     Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);               // Get all orders
-        Route::get('/live', [OrderController::class, 'liveOrders']);               // Get live orders
-        Route::post('/', [OrderController::class, 'createOrder']);        // Create a new order
-        Route::put('/{id}', [OrderController::class, 'updateOrder']);     // Update an order
-        Route::delete('/{id}', [OrderController::class, 'deleteOrder']);  // Delete an order
+        Route::get('/', [OrderController::class, 'index']);                    // Get all orders
+        Route::get('/live', [OrderController::class, 'liveOrders']);           // Get live orders
+        Route::get('/completed', [OrderController::class, 'completedOrder']);  // Get completed orders
+        Route::get('/canceled', [OrderController::class, 'canceledOrder']);    // Get canceled orders
+        Route::post('/', [OrderController::class, 'createOrder']);             // Create a new order
+        Route::put('/{id}', [OrderController::class, 'updateOrder']);          // Update an order
+        Route::delete('/{id}', [OrderController::class, 'deleteOrder']);       // Delete an order
     });
 
     Route::prefix('orderItem')->group(function () {
-        Route::get('/', [OrderItemController::class, 'index']);               // Get all orders
-        Route::post('/', [OrderItemController::class, 'create']);        // Create a new order
-        Route::put('/{id}', [OrderItemController::class, 'update']);     // Update an order
-        Route::delete('/{id}', [OrderItemController::class, 'destroy']);  // Delete an order
+        Route::get('/', [OrderItemController::class, 'index']);               // Get all orderItems
+        Route::post('/', [OrderItemController::class, 'create']);             // Create a new orderItem
+        Route::put('/{id}', [OrderItemController::class, 'update']);          // Update an orderItem
+        Route::delete('/{id}', [OrderItemController::class, 'destroy']);      // Delete an orderItem
     });
 
     Route::prefix('tables')->group(function () {

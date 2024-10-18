@@ -41,12 +41,12 @@ class AuthController extends Controller
 
         // Default to email login with password
         $credentials = $request->only('email', 'password');
-
-        if (!$token = auth()->attempt($credentials)) {
+        $token = auth()->attempt($credentials);
+        if (!$token) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return $this->respondWithToken($token, $shift, $user);
+        return $this->respondWithToken($token, null, auth()->user());
     }
 
 
@@ -74,7 +74,7 @@ class AuthController extends Controller
     }
 
     // Helper function to respond with token
-    protected function respondWithToken($token, $shift, $user)
+    protected function respondWithToken($token, $shift = null, $user = null)
     {
         return response()->json([
             'message' => 'Login successful',
