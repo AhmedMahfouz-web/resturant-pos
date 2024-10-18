@@ -4,7 +4,7 @@ use App\Models\Order;
 
 if (!function_exists('calculate_tax_and_service')) {
 
-    function calculate_tax_and_service($totalAmount, $type, $discount = 0, $discount_type = null, $taxPercentage = 14, $servicePercentage = 10)
+    function calculate_tax_and_service($totalAmount, $type, $discount = 0, $discount_type = null, $taxPercentage = 14, $servicePercentage = 12)
     {
         if ($type == 'dine-in') {
             // Calculate service charge
