@@ -86,7 +86,8 @@ class OrderController extends Controller
         return response()->json([
             'success' => 'true',
             'message' => 'Order created successfully',
-            'order' => $order
+            'order' => $order,
+            'items' => $order->orderItems,
         ], 201);
     }
 
