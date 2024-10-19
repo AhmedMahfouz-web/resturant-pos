@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Table;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -82,6 +83,9 @@ class OrderController extends Controller
             ]);
         }
 
+
+        $table = Table::find($order->table_id);
+        $table->update(['is_free' => 0]);
 
         return response()->json([
             'success' => 'true',
