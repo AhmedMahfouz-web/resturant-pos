@@ -17,6 +17,7 @@ class Order extends Model
         'code',
         'tax',
         'service',
+        'discount',
         'sub_total',
         'total_amount'
     ];
