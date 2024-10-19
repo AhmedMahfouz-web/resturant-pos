@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             TableSeeder::class,
             MaterialSeeder::class,
             RecipeSeeder::class,
+            DiscountSeeder::class,
         ]);
     }
 }

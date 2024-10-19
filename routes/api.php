@@ -77,6 +77,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/completed', [OrderController::class, 'completedOrder']);  // Get completed orders
         Route::get('/canceled', [OrderController::class, 'canceledOrder']);    // Get canceled orders
         Route::post('/', [OrderController::class, 'createOrder']);             // Create a new order
+        Route::put('/{id}/discount', [OrderController::class, 'discount']);    // Update an order
         Route::put('/{id}', [OrderController::class, 'updateOrder']);          // Update an order
         Route::delete('/{id}', [OrderController::class, 'deleteOrder']);       // Delete an order
     });

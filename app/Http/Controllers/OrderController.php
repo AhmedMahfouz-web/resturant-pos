@@ -114,10 +114,20 @@ class OrderController extends Controller
         $order = Order::find($id);
         if (!$order) {
             return response()->json([
-                'success' => 0,
+                'success' => 'false',
                 'message' => 'Order not found'
             ], 404);
         }
+
+        $discount_value = calculate_discount($request->type, $request->amount, $order->sub_total);
+
+        $order->update(['discount' => $discount_value]);
+
+        return response()->json([
+            'success' => 'true',
+            'message' => 'Discount applied successfully',
+            'order' => $order->load('orderItems'),
+        ]);
     }
 
     // Generate ids for orders

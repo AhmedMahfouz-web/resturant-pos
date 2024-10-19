@@ -13,15 +13,15 @@ if (!function_exists('calculate_tax_and_service')) {
             $serviceAmount = 0;
         }
 
-        if ($discount_type != null) {
-            if ($discount_type == 'percentage') {
-                $discount_value = ($totalAmount + $serviceAmount) * $discount;
-            } else {
-                $discount_value = $discount;
-            }
-        } else {
-            $discount_value = 0;
-        }
+        // if ($discount_type != null) {
+        //     if ($discount_type == 'percentage') {
+        //         $discount_value = ($totalAmount + $serviceAmount) * $discount;
+        //     } else {
+        //         $discount_value = $discount;
+        //     }
+        // } else {
+        //     $discount_value = 0;
+        // }
 
         // Calculate tax
         $taxAmount = ($taxPercentage / 100) * ($totalAmount + $serviceAmount);
@@ -30,8 +30,8 @@ if (!function_exists('calculate_tax_and_service')) {
         return [
             'tax' => $taxAmount,
             'service' => $serviceAmount,
-            'discount_value' => $discount_value,
-            'grand_total' => $totalAmount + $taxAmount + $serviceAmount - $discount_value,
+            'discount_value' => $discount,
+            'grand_total' => $totalAmount + $taxAmount + $serviceAmount - $discount,
         ];
     }
 
@@ -44,7 +44,7 @@ if (!function_exists('calculate_tax_and_service')) {
                 return $item->product->price * $item->quantity;
             });
 
-            $charges = calculate_tax_and_service($totalAmount, $order->type);
+            $charges = calculate_tax_and_service($totalAmount, $order->type, $order->discount);
 
             $order->update([
                 'sub_total' => $totalAmount,
@@ -65,5 +65,17 @@ if (!function_exists('calculate_tax_and_service')) {
 
             $material->decrement('quantity', $totalMaterialUsed);
         }
+    }
+
+    function calculate_discount($type, $amount, $sub_total)
+    {
+        $disount_value = 0;
+        if ($type == 'cash') {
+            $discount_value = $amount;
+        } else {
+            $discount_value = $sub_total * $amount / 100;
+        }
+
+        return $discount_value;
     }
 }
