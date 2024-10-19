@@ -32,6 +32,10 @@ class AuthController extends Controller
             $token = auth()->login($user);
             $shift = app(ShiftController::class);
             $shift = $shift->startShift($user);
+
+            $user->shift = $shift;
+
+
             if ($shift) {
                 return $this->respondWithToken($token, $shift, $user);
             } else {
@@ -79,7 +83,6 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'user' => $user,
-            'shift' => $shift,
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL()
