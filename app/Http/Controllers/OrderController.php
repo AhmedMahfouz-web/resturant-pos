@@ -84,8 +84,8 @@ class OrderController extends Controller
         }
 
 
-        $table = Table::find($order->table_id);
-        $table->update(['is_free' => 0]);
+        // $table = Table::find($order->table_id);
+        // $table->update(['is_free' => 0]);
 
         return response()->json([
             'success' => 'true',

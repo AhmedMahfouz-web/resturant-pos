@@ -11,7 +11,8 @@ class Table extends Model
 
     protected $fillable = [
         'number',
-        'capacity'
+        'capacity',
+        'is_free',
     ];
 
     public function orders()
