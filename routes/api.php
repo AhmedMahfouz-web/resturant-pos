@@ -59,6 +59,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/', [ProductController::class, 'index']);                 // Get all products
         Route::post('/', [ProductController::class, 'storeProduct']);         // Create a new product
         Route::post('/create', [ProductController::class, 'createProduct']);  // Create a new product
+        Route::get('/{id}', [ProductController::class, 'editProduct']);     // Update a product
         Route::put('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
         Route::delete('/{id}', [ProductController::class, 'deleteProduct']);  // Delete a product
     });
@@ -92,6 +93,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::prefix('tables')->group(function () {
         Route::get('/', [TableController::class, 'index']);               // Get all tables
         Route::post('/', [TableController::class, 'createTable']);        // Create a new table
+        Route::get('/{id}', [TableController::class, 'editTable']);     // Edit a table
         Route::put('/{id}', [TableController::class, 'updateTable']);     // Update a table
         Route::delete('/{id}', [TableController::class, 'deleteTable']);  // Delete a table
     });

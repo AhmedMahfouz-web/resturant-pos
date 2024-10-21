@@ -21,7 +21,14 @@ class TableController extends Controller
         return response()->json(['message' => 'Table created successfully', 'table' => $table], 201);
     }
 
-    // Update a table
+    // Edit a table
+    public function editTable($id)
+    {
+        $table = Table::find($id);
+
+        return response()->json(['table' => $table]);
+    }
+
     public function updateTable(Request $request, $id)
     {
         $table = Table::findOrFail($id);

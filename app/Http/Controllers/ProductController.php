@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Recipe;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -11,15 +12,17 @@ class ProductController extends Controller
     // List all products
     public function index()
     {
-        $product = Product::with('category:id,name')->get();
-        return response()->json($product);
+        $products = Product::with('category:id,name recipe')->get();
+        return response()->json($products);
     }
 
     public function createProduct()
     {
         $categories = Category::all();
 
-        return response()->json(['categories' => $categories]);
+        return response()->json([
+            'categories' => $categories,
+        ], 200);
     }
 
     // Add a new product
@@ -36,7 +39,18 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product created successfully', 'product' => $product], 201);
     }
 
-    // Update a product
+    // Edit a product
+    public function editProduct($id)
+    {
+        $categories = Category::all();
+        $product = Product::where('id', $id)->with('category:id,name')->first();
+
+        return response()->json([
+            'categories' => $categories,
+            'product' => $product
+        ], 200);
+    }
+
     public function updateProduct(Request $request, $id)
     {
         $product = Product::findOrFail($id);
