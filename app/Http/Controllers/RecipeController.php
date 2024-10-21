@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
+use App\Models\Product;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
 
@@ -10,14 +12,26 @@ class RecipeController extends Controller
     public function index()
     {
         $recipes = Recipe::with('materials')->get();
-        return response()->json($recipes);
+        return response()->json($recipes, 200);
     }
 
     // Show a specific recipe
     public function show($id)
     {
         $recipe = Recipe::with('materials')->findOrFail($id);
-        return response()->json($recipe);
+        return response()->json($recipe, 200);
+    }
+
+    // Create a new recipe
+    public function create()
+    {
+        $materials = Material::all();
+        $products = Product::all();
+
+        return response()->json([
+            'materials' => $materials,
+            'products' => $products,
+        ], 200);
     }
 
     // Create a new recipe
@@ -64,7 +78,7 @@ class RecipeController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Recipe updated successfully', 'recipe' => $recipe]);
+        return response()->json(['message' => 'Recipe updated successfully', 'recipe' => $recipe], 201);
     }
 
     // Delete a recipe

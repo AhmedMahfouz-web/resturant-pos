@@ -57,9 +57,10 @@ Route::group(['middleware' => 'jwt'], function () {
 
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'index']);                 // Get all products
+        Route::get('/show/{id}', [ProductController::class, 'show']);         // Get specific product
+        Route::get('/create', [ProductController::class, 'createProduct']);   // Create a new product
         Route::post('/', [ProductController::class, 'storeProduct']);         // Create a new product
-        Route::post('/create', [ProductController::class, 'createProduct']);  // Create a new product
-        Route::get('/{id}', [ProductController::class, 'editProduct']);     // Update a product
+        Route::get('/{id}', [ProductController::class, 'editProduct']);       // Update a product
         Route::put('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
         Route::delete('/{id}', [ProductController::class, 'deleteProduct']);  // Delete a product
     });
