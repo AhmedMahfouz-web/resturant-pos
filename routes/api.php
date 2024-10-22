@@ -115,8 +115,9 @@ Route::group(['middleware' => 'jwt'], function () {
 
     Route::prefix('recipes')->group(function () {
         Route::get('', [RecipeController::class, 'index']);
-        Route::get('/{id}', [RecipeController::class, 'show']);
+        Route::get('/show/{id}', [RecipeController::class, 'show']);
         Route::post('', [RecipeController::class, 'store']);
+        Route::get('/{id}', [RecipeController::class, 'edit']);
         Route::put('/{id}', [RecipeController::class, 'update']);
         Route::delete('/{id}', [RecipeController::class, 'destroy']);
     });

@@ -18,7 +18,7 @@ class RecipeController extends Controller
     // Show a specific recipe
     public function show($id)
     {
-        $recipe = Recipe::with('materials')->findOrFail($id);
+        $recipe = Recipe::with(['materials', 'product'])->findOrFail($id);
         return response()->json($recipe, 200);
     }
 
@@ -38,7 +38,7 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id|unique',
             'materials' => 'required|array', // Array of material IDs and quantities
             'materials.*.material_id' => 'required|exists:materials,id',
             'materials.*.material_quantity' => 'required|numeric|min:0.01',
@@ -57,6 +57,19 @@ class RecipeController extends Controller
         }
 
         return response()->json(['message' => 'Recipe created successfully', 'recipe' => $recipe], 201);
+    }
+
+    // Edit a new recipe
+    public function edit($id)
+    {
+        $materials = Material::all();
+        $products = Product::all();
+        $recipe = Recipe::with(['materials', 'product'])->findOrFail($id);
+
+        return response()->json([
+            'materials' => $materials,
+            'products' => $products,
+        ], 200);
     }
 
     // Update an existing recipe

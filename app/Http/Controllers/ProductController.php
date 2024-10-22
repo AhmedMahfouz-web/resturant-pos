@@ -13,9 +13,17 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with(['category:id,name', 'recipe'])->get();
-        return response()->json($products);
+        return response()->json($products, 200);
     }
 
+    // Show Specific product
+    public function show($id)
+    {
+        $product = Product::where('id', $id)->with(['category:id,name', 'recipe'])->first();
+        return response()->json($product, 200);
+    }
+
+    // Create a new product
     public function createProduct()
     {
         $categories = Category::all();

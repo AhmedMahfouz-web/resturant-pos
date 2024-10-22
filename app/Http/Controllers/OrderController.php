@@ -20,21 +20,21 @@ class OrderController extends Controller
     // Get live orders
     public function liveOrders()
     {
-        $orders = Order::where('status', 'live')->with('orderItems')->get();
+        $orders = Order::where('status', 'live')->with('orderItems.products')->get();
         return response()->json($orders);
     }
 
     // Get canceled orders
     public function canceledOrders()
     {
-        $orders = Order::where('status', 'canceled')->with('orderItems')->get();
+        $orders = Order::where('status', 'canceled')->with('orderItems.products')->get();
         return response()->json($orders);
     }
 
     // Get completed orders
     public function completedOrders()
     {
-        $orders = Order::where('status', 'completed')->with('orderItems')->latest();
+        $orders = Order::where('status', 'completed')->with('orderItems.products')->latest();
 
         return response()->json($orders);
     }
