@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             MaterialSeeder::class,
             RecipeSeeder::class,
             DiscountSeeder::class,
+            PaymentMethodSeeder::class,
         ]);
     }
 }

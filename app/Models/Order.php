@@ -19,7 +19,8 @@ class Order extends Model
         'service',
         'discount',
         'sub_total',
-        'total_amount'
+        'total_amount',
+        'close_at',
     ];
 
     public function table()

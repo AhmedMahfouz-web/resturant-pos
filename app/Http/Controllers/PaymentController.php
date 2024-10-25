@@ -9,11 +9,10 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function create($request)
+    public function create(Request $request)
     {
 
-        $order = Order::with('orderItems.product');
-
+        $order = Order::where('id', $request->order_id)->with('orderItems.product')->first();
         if ($request->amount < $order->total_amount) {
             return response()->json([
                 'success' => 'false',
@@ -23,6 +22,12 @@ class PaymentController extends Controller
 
         $change = $request->amount - $order->amount;
 
+        $payment = Payment::where('order_id', $request->order_id)->first();
+        if (!empty($payment)) {
+            return response()->json([
+                'message' => 'this order is paid already',
+            ], 405);
+        }
         // Create the payment
         $payment = Payment::create([
             'order_id' => $order->id,
@@ -30,7 +35,10 @@ class PaymentController extends Controller
             'payment_method_id' => $request->payment_method_id,
         ]);
 
-
+        $order->update([
+            'status' => 'completed',
+            'close_at' => now()
+        ]);
 
         // DecrementMaterials::dispatch($order);
 
@@ -38,7 +46,7 @@ class PaymentController extends Controller
         return response()->json([
             'message' => 'Payment successful',
             'order' => $order,
-            'payment' => $payment,
+            'payment' => $payment->load('paymentMethod'),
             'change' => $change
         ], 201);
     }

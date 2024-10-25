@@ -31,21 +31,22 @@ class DecrementMaterials implements ShouldQueue
      */
     public function handle(): void
     {
-        $material = app(MaterialController::class);
+        // $material = app(MaterialController::class);
         foreach ($this->order->orderItems as $item) {
             $product = $item->product;
             // Retrieve the recipe for the product
             $recipe = $product->recipe;
+            $recipe->load('materials');
 
             // Loop through the materials in the recipe and decrement the quantities
-            foreach ($recipe->materials as $material) {
-                $materialUsed = $recipe->materials->find($material->id)->pivot->material_quantity;
+            foreach ($recipe[0]->materials as $material) {
+                $materialUsed = $material->pivot->material_quantity; // Access pivot directly from the material
                 $totalMaterialUsed = $materialUsed * $item->quantity; // Multiply by the number of products ordered
 
                 // Decrement the material's quantity
                 $material->decrement('quantity', $totalMaterialUsed);
 
-                $remainingProductCount = floor($material->quantity / $material->pivot->quantity_used);
+                $remainingProductCount = floor($material->quantity / $materialUsed);
                 if ($remainingProductCount < 3) {
                     // Trigger alert if material stock is too low
                     $this->triggerLowStockAlert($item->product, $material);

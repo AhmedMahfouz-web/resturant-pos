@@ -10,11 +10,7 @@ class PaymentObserver
 {
     public function created(Payment $payment): void
     {
-        $order = Order::find($payment->order_id);
-        $order->update([
-            'status' => 'completed',
-            'close_at' => now()
-        ]);
+        $order = Order::where('id', $payment->order_id)->first();
 
         // Decrement materialas for each product
         DecrementMaterials::dispatch($order);

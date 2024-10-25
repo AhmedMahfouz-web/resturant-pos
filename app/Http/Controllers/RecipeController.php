@@ -6,6 +6,7 @@ use App\Models\Material;
 use App\Models\Product;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RecipeController extends Controller
 {
@@ -37,20 +38,27 @@ class RecipeController extends Controller
     // Create a new recipe
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id|unique',
-            'materials' => 'required|array', // Array of material IDs and quantities
-            'materials.*.material_id' => 'required|exists:materials,id',
-            'materials.*.material_quantity' => 'required|numeric|min:0.01',
-        ]);
+        // $validated = $request->validate([
+        //     'product_id' => 'required|exists:products,id|unique',
+        //     'materials' => 'required|array', // Array of material IDs and quantities
+        //     'materials.*.material_id' => 'required|exists:materials,id',
+        //     'materials.*.material_quantity' => 'required|numeric|min:0.01',
+        // ]);
 
         // Create the recipe for the product
         $recipe = Recipe::create([
-            'product_id' => $validated['product_id']
+            'product_id' => $request->product_id,
+            'name' => $request->name,
+            'instructions' => $request->instructions
+        ]);
+
+        DB::table('recipe_product')->insert([
+            'recipe_id' => $recipe->id,
+            'product_id' => $request->product_id
         ]);
 
         // Attach materials to the recipe
-        foreach ($validated['materials'] as $material) {
+        foreach ($request->materials as $material) {
             $recipe->materials()->attach($material['material_id'], [
                 'material_quantity' => $material['material_quantity'],
             ]);

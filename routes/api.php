@@ -5,6 +5,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ReportController;
@@ -94,7 +95,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::prefix('tables')->group(function () {
         Route::get('/', [TableController::class, 'index']);               // Get all tables
         Route::post('/', [TableController::class, 'createTable']);        // Create a new table
-        Route::get('/{id}', [TableController::class, 'editTable']);     // Edit a table
+        Route::get('/{id}', [TableController::class, 'editTable']);       // Edit a table
         Route::put('/{id}', [TableController::class, 'updateTable']);     // Update a table
         Route::delete('/{id}', [TableController::class, 'deleteTable']);  // Delete a table
     });
@@ -120,6 +121,10 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/{id}', [RecipeController::class, 'edit']);
         Route::put('/{id}', [RecipeController::class, 'update']);
         Route::delete('/{id}', [RecipeController::class, 'destroy']);
+    });
+
+    Route::prefix('payment')->group(function () {
+        Route::post('/', [PaymentController::class, 'create']);
     });
 
     Route::prefix('shift')->group(function () {

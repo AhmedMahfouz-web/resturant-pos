@@ -18,6 +18,10 @@ class CategorySeeder extends Seeder
             ['name' => 'Main Course', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Beverages', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Desserts', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Salads', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Soups', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Snacks', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Breakfast', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

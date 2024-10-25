@@ -16,7 +16,7 @@ class PaymentMethodSeeder extends Seeder
     {
         $payments = ['Cash', 'Visa'];
         foreach ($payments as $payment) {
-            Payment::create(['name' => $payment]);
+            PaymentMethod::create(['name' => $payment]);
         }
     }
 }
