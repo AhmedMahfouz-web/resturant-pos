@@ -43,7 +43,7 @@ class OrderController extends Controller
     public function createOrder(Request $request)
     {
         $validated = $request->validate([
-            'table_id' => 'required|exists:tables,id',
+            'table_id' => 'exists:tables,id',
             'items' => 'required|array', // Array of items
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
