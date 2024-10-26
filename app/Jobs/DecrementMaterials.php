@@ -37,19 +37,21 @@ class DecrementMaterials implements ShouldQueue
             // Retrieve the recipe for the product
             $recipe = $product->recipe;
             $recipe->load('materials');
+            if (!empty($recipe[0])) {
 
-            // Loop through the materials in the recipe and decrement the quantities
-            foreach ($recipe[0]->materials as $material) {
-                $materialUsed = $material->pivot->material_quantity; // Access pivot directly from the material
-                $totalMaterialUsed = $materialUsed * $item->quantity; // Multiply by the number of products ordered
+                // Loop through the materials in the recipe and decrement the quantities
+                foreach ($recipe[0]->materials as $material) {
+                    $materialUsed = $material->pivot->material_quantity; // Access pivot directly from the material
+                    $totalMaterialUsed = $materialUsed * $item->quantity; // Multiply by the number of products ordered
 
-                // Decrement the material's quantity
-                $material->decrement('quantity', $totalMaterialUsed);
+                    // Decrement the material's quantity
+                    $material->decrement('quantity', $totalMaterialUsed);
 
-                $remainingProductCount = floor($material->quantity / $materialUsed);
-                if ($remainingProductCount < 3) {
-                    // Trigger alert if material stock is too low
-                    $this->triggerLowStockAlert($item->product, $material);
+                    $remainingProductCount = floor($material->quantity / $materialUsed);
+                    if ($remainingProductCount < 3) {
+                        // Trigger alert if material stock is too low
+                        $this->triggerLowStockAlert($item->product, $material);
+                    }
                 }
             }
         }
