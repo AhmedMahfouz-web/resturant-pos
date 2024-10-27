@@ -21,6 +21,7 @@ class Order extends Model
         'sub_total',
         'total_amount',
         'close_at',
+        'type',
     ];
 
     public function table()
