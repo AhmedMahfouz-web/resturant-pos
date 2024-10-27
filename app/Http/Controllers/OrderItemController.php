@@ -26,7 +26,7 @@ class OrderItemController extends Controller
         ]);
 
 
-        return response()->json(['message' => 'OrderItemcx created successfully', 'order_item' => $orderItem->load(['order', 'product'])], 201);
+        return response()->json(['message' => 'OrderItem created successfully', 'order_item' => $orderItem->load(['order', 'product'])], 201);
     }
 
     public function update($id, Request $request)
