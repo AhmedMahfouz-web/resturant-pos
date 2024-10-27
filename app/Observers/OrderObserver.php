@@ -10,8 +10,10 @@ class OrderObserver
     public function created(Order $order): void
     {
         // Update table's free status
-        $table = Table::find($order->table_id);
-        $table->update(['is_free' => 0]);   
+        if (!empty($order->table_id)) {
+            $table = Table::find($order->table_id);
+            $table->update(['is_free' => 0]);
+        }
     }
 
     public function updated(Order $order): void

@@ -58,20 +58,34 @@ class OrderController extends Controller
         }
 
         $charges = calculate_tax_and_service($totalAmount, $request->type);
-
-        $order = Order::create([
-            'user_id' => auth()->user()->id,
-            'code' => $newOrderId,
-            'guest' => $request->guest,
-            'table_id' => $request->table_id,
-            'shift_id' => $request->shift_id,
-            'status' => 'live',
-            'tax' => $charges['tax'],
-            'discount' => $charges['discount_value'],
-            'service' => $charges['service'],
-            'sub_total' => $totalAmount,
-            'total_amount' => $charges['grand_total'],
-        ]);
+        if (empty($request->table_id)) {
+            $order = Order::create([
+                'user_id' => auth()->user()->id,
+                'code' => $newOrderId,
+                'guest' => $request->guest,
+                'shift_id' => $request->shift_id,
+                'status' => 'live',
+                'tax' => $charges['tax'],
+                'discount' => $charges['discount_value'],
+                'service' => $charges['service'],
+                'sub_total' => $totalAmount,
+                'total_amount' => $charges['grand_total'],
+            ]);
+        } else {
+            $order = Order::create([
+                'user_id' => auth()->user()->id,
+                'code' => $newOrderId,
+                'guest' => $request->guest,
+                'table_id' => $request->table_id,
+                'shift_id' => $request->shift_id,
+                'status' => 'live',
+                'tax' => $charges['tax'],
+                'discount' => $charges['discount_value'],
+                'service' => $charges['service'],
+                'sub_total' => $totalAmount,
+                'total_amount' => $charges['grand_total'],
+            ]);
+        }
 
         foreach ($request->items as $item) {
             $product = Product::find($item['product_id']);
