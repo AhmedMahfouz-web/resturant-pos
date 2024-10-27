@@ -11,6 +11,14 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    //Get specific order
+    public function show($id)
+    {
+        $order = Order::with('orderItems.product')->find($id);
+
+        return response()->json($order);
+    }
+
     // Get all orders
     public function index()
     {

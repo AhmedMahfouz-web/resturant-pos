@@ -79,6 +79,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/live', [OrderController::class, 'liveOrders']);           // Get live orders
         Route::get('/completed', [OrderController::class, 'completedOrder']);  // Get completed orders
         Route::get('/canceled', [OrderController::class, 'canceledOrder']);    // Get canceled orders
+        Route::get('/show/{id}', [OrderController::class, 'show']);    // Show Specific order
         Route::post('/', [OrderController::class, 'createOrder']);             // Create a new order
         Route::post('/{id}/discount', [OrderController::class, 'discount']);    // Update an order
         Route::put('/{id}', [OrderController::class, 'updateOrder']);          // Update an order
