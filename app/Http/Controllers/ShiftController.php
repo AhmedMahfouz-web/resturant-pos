@@ -40,7 +40,7 @@ class ShiftController extends Controller
     public function getShiftDetails($shiftId)
     {
         // Retrieve the shift with its orders
-        $shift = Shift::with('orders.payments.paymentMethod')->find($shiftId);
+        $shift = Shift::with('orders.payment.paymentMethod')->find($shiftId);
 
         if (!$shift) {
             return response()->json(['message' => 'Shift not found'], 404);
