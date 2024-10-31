@@ -85,7 +85,8 @@ class User extends Authenticatable implements JWTSubject
     // {
     //     return $this->getPermissionsViaRoles();
     // }
-    public function logoutAllUsers()
+
+    public static function logoutAllUsers()
     {
 
         $users = User::all();
