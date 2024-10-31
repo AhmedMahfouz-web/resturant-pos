@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Shift;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -28,13 +29,22 @@ class ShiftController extends Controller
         }
     }
 
-    public function endShift()
+    public function closeShift(Request $request, $shiftId)
     {
-        $shift = Shift::where('end_time', null)->first();
-        if ($shift) {
-            $shift->end_time = now();
-            $shift->save();
+        $shift = Shift::find($shiftId);
+
+        if (!$shift) {
+            return response()->json(['message' => 'Shift not found'], 404);
         }
+
+
+        $shift->update([
+            'end_time' => now()
+        ]);
+
+        User::logoutAllUsers();
+
+        return response()->json(['message' => 'Shift closed successfully and users logged out'], 200);
     }
 
     public function getShiftDetails($shiftId)

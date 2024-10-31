@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -84,4 +85,14 @@ class User extends Authenticatable implements JWTSubject
     // {
     //     return $this->getPermissionsViaRoles();
     // }
+    public function logoutAllUsers()
+    {
+
+        $users = User::all();
+
+        foreach ($users as $user) {
+            // Blacklist each user’s current token
+            JWTAuth::invalidate(JWTAuth::fromUser($user));
+        }
+    }
 }

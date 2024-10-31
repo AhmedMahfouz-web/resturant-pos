@@ -130,6 +130,7 @@ Route::group(['middleware' => 'jwt'], function () {
 
     Route::prefix('shift')->group(function () {
         Route::get('{shiftId}/details', [ShiftController::class, 'getShiftDetails']);
+        Route::get('{shiftId}/close', [ShiftController::class, 'closeShift']);
     });
 
     Route::get('/reports/sales', [ReportController::class, 'salesReport']);
