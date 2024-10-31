@@ -20,7 +20,7 @@ class PaymentController extends Controller
             ], 405);
         }
 
-        $change = $request->amount - $order->amount;
+        $change = $request->amount - $order->total_amount;
 
         $payment = Payment::where('order_id', $request->order_id)->first();
         if (!empty($payment)) {

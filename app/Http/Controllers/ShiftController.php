@@ -40,36 +40,83 @@ class ShiftController extends Controller
     public function getShiftDetails($shiftId)
     {
         // Retrieve the shift with its orders
-        $shift = Shift::with('orders.payment.paymentMethod')->find($shiftId);
+        //     $shift = Shift::with('orders.payment.paymentMethod')->find($shiftId);
+
+        //     if (!$shift) {
+        //         return response()->json(['message' => 'Shift not found'], 404);
+        //     }
+
+        //     // Calculate total payments for each method within the shift
+        //     $paymentTotals = Payment::select('payment_method_id', DB::raw('SUM(amount) as total_amount'))
+        //         ->whereHas('order', function ($query) use ($shiftId) {
+        //             $query->where('shift_id', $shiftId); // Filter by shift
+        //         })
+        //         ->groupBy('payment_method_id')
+        //         ->with('paymentMethod')
+        //         ->get();
+
+        //     // Format the total payments by method
+        //     $formattedPaymentTotals = $paymentTotals->map(function ($payment) {
+        //         return [
+        //             'method' => $payment->paymentMethod->name,
+        //             'total_amount' => $payment->total_amount
+        //         ];
+        //     });
+
+        //     // Calculate total shift sales
+        //     $totalShiftAmount = $shift->orders->sum('total_amount');
+
+        //     return response()->json([
+        //         'shift' => $shift,
+        //         'total_sales' => $totalShiftAmount,
+        //         'payment_totals' => $formattedPaymentTotals,
+        //     ]);
+        // }
+
+        $shift = Shift::find($shiftId);
 
         if (!$shift) {
             return response()->json(['message' => 'Shift not found'], 404);
         }
 
+        $orderSums = $shift->orders()
+            ->selectRaw('SUM(total_amount) as total_sales')
+            ->selectRaw('SUM(tax) as total_tax')
+            ->selectRaw('SUM(service) as total_services')
+            ->selectRaw('SUM(discount) as total_discounts')
+            ->first();
+
         // Calculate total payments for each method within the shift
-        $paymentTotals = Payment::select('payment_method_id', DB::raw('SUM(amount) as total_amount'))
-            ->whereHas('order', function ($query) use ($shiftId) {
-                $query->where('shift_id', $shiftId); // Filter by shift
+        $paymentTotals = Payment::select('payment_method_id', \DB::raw('SUM(amount) as total_amount'))
+            ->whereIn('order_id', function ($query) use ($shiftId) {
+                $query->select('id')
+                    ->from('orders')
+                    ->where('shift_id', $shiftId); // Filter by shift
             })
             ->groupBy('payment_method_id')
-            ->with('paymentMethod')
-            ->get();
+            ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
+            ->get()
+            ->map(function ($payment) {
+                return [
+                    'method' => $payment->paymentMethod->name,
+                    'total_amount' => $payment->total_amount
+                ];
+            });
 
-        // Format the total payments by method
-        $formattedPaymentTotals = $paymentTotals->map(function ($payment) {
-            return [
-                'method' => $payment->paymentMethod->name,
-                'total_amount' => $payment->total_amount
-            ];
-        });
 
-        // Calculate total shift sales
-        $totalShiftAmount = $shift->orders->sum('total_amount');
 
         return response()->json([
-            'shift' => $shift,
-            'total_sales' => $totalShiftAmount,
-            'payment_totals' => $formattedPaymentTotals,
+            'shift' => [
+                'id' => $shift->id,
+                'start_time' => $shift->start_time,
+                'end_time' => $shift->end_time,
+                'user_id' => $shift->user_id,
+                'total_sales' => $orderSums->total_sales,
+                'total_tax' => $orderSums->total_tax,
+                'total_services' => $orderSums->total_services,
+                'total_discounts' => $orderSums->total_discounts,
+                'payment_totals' => $paymentTotals,
+            ],
         ]);
     }
 }
