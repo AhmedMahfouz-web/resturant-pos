@@ -63,10 +63,11 @@ class AuthController extends Controller
     // Log the user out (Invalidate the token)
     public function logout()
     {
-        if (auth()->user()->can('end shift')) {
-            $shift = app(ShiftController::class);
-            $shift->endShift();
-        }
+        // if (auth()->user()->can('end shift')) {
+        //     $shift = app(ShiftController::class);
+        //     $shift->endShift();
+        // }
+
         auth()->logout();
         return response()->json(['message' => 'Successfully logged out']);
     }

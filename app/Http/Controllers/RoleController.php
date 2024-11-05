@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -48,5 +49,16 @@ class RoleController extends Controller
 
         $role->delete();
         return response()->json(['message' => 'Role deleted successfully']);
+    }
+
+    public function checkPermission(Request $request)
+    {
+        $user = User::where('login_code', $request->code)->first();
+
+        if ($user->hasAllDirectPermissions($request->permission)) {
+            return response()->json(['message' => true], 200);
+        } else {
+            return response()->json(['message' => false], 401);
+        }
     }
 }

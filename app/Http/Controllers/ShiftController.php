@@ -90,26 +90,23 @@ class ShiftController extends Controller
         }
 
         $orderSums = $shift->orders()
-            ->selectRaw('SUM(total_amount) as total_sales')
-            ->selectRaw('SUM(tax) as total_tax')
-            ->selectRaw('SUM(service) as total_services')
-            ->selectRaw('SUM(discount) as total_discounts')
+            ->selectRaw('SUM(total_amount) as total_sales, SUM(tax) as total_tax, SUM(service) as total_services, SUM(discount) as total_discounts')
             ->first();
 
         // Calculate total payments for each method within the shift
-        $paymentTotals = Payment::select('payment_method_id', \DB::raw('SUM(amount) as total_amount'))
+        $paymentTotals = Payment::with('paymentMethod:id,name') // Only load payment method name
+            ->select('payment_method_id', DB::raw('SUM(amount) as total_amount'))
             ->whereIn('order_id', function ($query) use ($shiftId) {
                 $query->select('id')
                     ->from('orders')
-                    ->where('shift_id', $shiftId); // Filter by shift
+                    ->where('shift_id', $shiftId);
             })
             ->groupBy('payment_method_id')
-            ->join('payment_methods', 'payments.payment_method_id', '=', 'payment_methods.id')
             ->get()
             ->map(function ($payment) {
                 return [
                     'method' => $payment->paymentMethod->name,
-                    'total_amount' => $payment->total_amount
+                    'total_amount' => $payment->total_amount,
                 ];
             });
 

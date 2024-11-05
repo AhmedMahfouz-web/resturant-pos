@@ -128,6 +128,10 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::post('/', [PaymentController::class, 'create']);
     });
 
+    Route::prefix('permission')->group(function () {
+        Route::post('/', [RoleController::class, 'checkPermission']);
+    });
+
     Route::prefix('shift')->group(function () {
         Route::get('{shiftId}/details', [ShiftController::class, 'getShiftDetails']);
         Route::post('{shiftId}/close', [ShiftController::class, 'closeShift']);

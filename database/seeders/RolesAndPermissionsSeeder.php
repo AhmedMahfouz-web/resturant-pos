@@ -35,7 +35,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'place order',
             'reprint bill',
             'edit order',
-            'delete order',
+            'cancel order',
             'split order',
             'merge order',
             'make discount',
@@ -43,7 +43,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'create discount',
             'edit discount',
             'delete discount',
-
+            'old reciept',
+            'reprint reciept',
+            'shift details',
         ];
 
         // Create each permission from the array
@@ -74,7 +76,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'place order',
                 'reprint bill',
                 'edit order',
-                'delete order',
+                'cancel order',
                 'split order',
                 'merge order',
                 'make discount',
@@ -82,6 +84,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create discount',
                 'edit discount',
                 'delete discount',
+                'old reciept',
+                'reprint reciept',
+                'shift details',
             ],
             'Manager' => [
                 'start shift',
@@ -104,7 +109,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'place order',
                 'reprint bill',
                 'edit order',
-                'delete order',
+                'cancel order',
                 'split order',
                 'merge order',
                 'make discount',
@@ -112,6 +117,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create discount',
                 'edit discount',
                 'delete discount',
+                'old reciept',
+                'reprint reciept',
+                'shift details',
             ],
             'Accountant' => [
                 'start shift',
@@ -131,7 +139,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'place order',
                 'reprint bill',
                 'edit order',
-                'delete order',
+                'cancel order',
                 'split order',
                 'merge order',
                 'make discount',
@@ -139,6 +147,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'create discount',
                 'edit discount',
                 'delete discount',
+                'old reciept',
+                'reprint reciept',
+                'shift details',
             ],
             'Waiter' => [],
             'Cashier' => [
