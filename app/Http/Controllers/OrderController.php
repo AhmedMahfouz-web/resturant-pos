@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Shift;
 use App\Models\Table;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -22,29 +23,45 @@ class OrderController extends Controller
     // Get all orders
     public function index()
     {
-        return response()->json(Order::with('orderItems.product')->get());
+        if (auth()->user()->can('old order')) {
+            return response()->json(Order::with('orderItems.product')->latest());
+        } else {
+            $shift_id = Shift::select('id')->first();
+            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest());
+        }
     }
 
     // Get live orders
     public function liveOrders()
     {
-        $orders = Order::where('status', 'live')->with('orderItems.product')->get();
+        $orders = Order::where('status', 'live')->with('orderItems.product')->latest();
         return response()->json($orders);
     }
 
     // Get canceled orders
     public function canceledOrders()
     {
-        $orders = Order::where('status', 'canceled')->with('orderItems.product')->get();
-        return response()->json($orders);
+        if (auth()->user()->can('old order')) {
+            $orders = Order::where('status', 'canceled')->with('orderItems.product')->latest();
+            return response()->json($orders);
+        } else {
+            $shift_id = Shift::select('id')->first();
+            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest();
+            return response()->json($orders);
+        }
     }
 
     // Get completed orders
     public function completedOrders()
     {
-        $orders = Order::where('status', 'completed')->with('orderItems.product')->latest();
-
-        return response()->json($orders);
+        if (auth()->user()->can('old order')) {
+            $orders = Order::where('status', 'completed')->with('orderItems.product')->latest();
+            return response()->json($orders);
+        } else {
+            $shift_id = Shift::select('id')->first();
+            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest();
+            return response()->json($orders);
+        }
     }
 
     // Create a new order

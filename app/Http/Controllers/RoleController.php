@@ -55,7 +55,7 @@ class RoleController extends Controller
     {
         $user = User::where('login_code', $request->code)->first();
 
-        if ($user->hasAllDirectPermissions($request->permission)) {
+        if ($user->can($request->permission)) {
             return response()->json(['message' => true], 200);
         } else {
             return response()->json(['message' => false], 401);
