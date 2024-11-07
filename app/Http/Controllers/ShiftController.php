@@ -90,6 +90,7 @@ class ShiftController extends Controller
         }
 
         $orderSums = $shift->orders()
+            ->where('status', 'completed')
             ->selectRaw('SUM(total_amount) as total_sales, SUM(tax) as total_tax, SUM(service) as total_services, SUM(discount) as total_discounts')
             ->first();
 
