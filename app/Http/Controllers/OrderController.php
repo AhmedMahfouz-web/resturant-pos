@@ -23,30 +23,30 @@ class OrderController extends Controller
     // Get all orders
     public function index()
     {
-        if (auth()->user()->can('old order')) {
-            return response()->json(Order::with('orderItems.product')->latest());
+        if (auth()->user()->can('old reciept')) {
+            return response()->json(Order::with('orderItems.product')->latest()->get());
         } else {
             $shift_id = Shift::select('id')->first();
-            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest());
+            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest()->get());
         }
     }
 
     // Get live orders
     public function liveOrders()
     {
-        $orders = Order::where('status', 'live')->with('orderItems.product')->latest();
+        $orders = Order::where('status', 'live')->with('orderItems.product')->latest()->get();
         return response()->json($orders);
     }
 
     // Get canceled orders
     public function canceledOrders()
     {
-        if (auth()->user()->can('old order')) {
-            $orders = Order::where('status', 'canceled')->with('orderItems.product')->latest();
+        if (auth()->user()->can('old reciept')) {
+            $orders = Order::where('status', 'canceled')->with('orderItems.product')->latest()->get();
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest();
+            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->get();
             return response()->json($orders);
         }
     }
@@ -54,12 +54,12 @@ class OrderController extends Controller
     // Get completed orders
     public function completedOrders()
     {
-        if (auth()->user()->can('old order')) {
-            $orders = Order::where('status', 'completed')->with('orderItems.product')->latest();
+        if (auth()->user()->can('old reciept')) {
+            $orders = Order::where('status', 'completed')->with('orderItems.product')->latest()->get();
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest();
+            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->get();
             return response()->json($orders);
         }
     }
