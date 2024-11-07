@@ -41,7 +41,7 @@ class OrderItemController extends Controller
         ]);
 
 
-        return response()->json(['message' => 'OrderItem updated successfully', 'order_item' => $$orderItem->load(['order', 'product'])], 200);
+        return response()->json(['message' => 'OrderItem updated successfully', 'order_item' => $orderItem->load(['order', 'product'])], 200);
     }
 
     public function destroy($id)
