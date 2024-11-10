@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -17,16 +18,26 @@ class OrderItemController extends Controller
         ]);
 
         $product = Product::find($request->product_id);
+        $order = Order::find($request->order_id);
 
-        $orderItem = OrderItem::create([
-            'order_id' => $request->order_id,
-            'product_id' => $product->id,
-            'price' => $product->price,
-            'quantity' => $request->quantity,
-        ]);
+        //Checking if there's and order
+        if (!empty($order)) {
+            //Checking if the order still live or not
+            if ($order->status == 'live') {
+                $orderItem = OrderItem::create([
+                    'order_id' => $request->order_id,
+                    'product_id' => $product->id,
+                    'price' => $product->price,
+                    'quantity' => $request->quantity,
+                ]);
 
-
-        return response()->json(['message' => 'OrderItem created successfully', 'order_item' => $orderItem->load(['order', 'product'])], 201);
+                return response()->json(['message' => 'OrderItem created successfully', 'order_item' => $orderItem->load(['order', 'product'])], 201);
+            } else {
+                return response()->json(['message' => 'Cannot update this order'], 403);
+            }
+        } else {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
     }
 
     public function update($id, Request $request)
