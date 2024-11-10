@@ -20,7 +20,7 @@ class OrderObserver
     {
         // Update table's free status
         if ($order->status == 'completed' || $order->status == 'canceled') {
-            if ($order->type == 'dine-in') {
+            if ($order->type == 'dine-in' && !empty($order->table_id)) {
                 $table = Table::find($order->table_id);
                 $table->update(['is_free' => 1]);
             }

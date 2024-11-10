@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Shift;
 use App\Models\User;
@@ -37,6 +38,10 @@ class ShiftController extends Controller
             return response()->json(['message' => 'Shift not found'], 404);
         }
 
+        $order = Order::where(['shift_id' => $shiftId, 'status' => 'live'])->first();
+        if (!empty($order)) {
+            return response()->json(['message' => 'Close all orders first'], 403);
+        }
 
         $shift->update([
             'end_time' => now()
