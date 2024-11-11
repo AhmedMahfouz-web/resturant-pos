@@ -44,7 +44,6 @@ class OrderItemController extends Controller
     {
         $orderItem = OrderItem::where('id', $id)->with('order')->first();
 
-        return $orderItem;
         if (!$orderItem) {
             return response()->json(['error' => 'Order item not found'], 404);
         }
