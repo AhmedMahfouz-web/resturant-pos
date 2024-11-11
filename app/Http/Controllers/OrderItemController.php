@@ -42,17 +42,22 @@ class OrderItemController extends Controller
 
     public function update($id, Request $request)
     {
-        $orderItem = OrderItem::find($id);
-        if (!$orderItem) {
-            return response()->json(['error' => 'Order item not found'], 404);
+        $orderItem = OrderItem::where('id', $id)->with('order')->first();
+
+        if ($orderItem->order->status == 'live') {
+            if (!$orderItem) {
+                return response()->json(['error' => 'Order item not found'], 404);
+            }
+
+            $orderItem->update([
+                'quantity' => $request->quantity
+            ]);
+
+
+            return response()->json(['message' => 'OrderItem updated successfully', 'order_item' => $orderItem->load(['order', 'product'])], 200);
+        } else {
+            return response()->json(['message' => 'OrderItem cannot be updated'], 403);
         }
-
-        $orderItem->update([
-            'quantity' => $request->quantity
-        ]);
-
-
-        return response()->json(['message' => 'OrderItem updated successfully', 'order_item' => $orderItem->load(['order', 'product'])], 200);
     }
 
     public function destroy($id)
