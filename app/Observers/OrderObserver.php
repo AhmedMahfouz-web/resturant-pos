@@ -18,7 +18,7 @@ class OrderObserver
 
     public function updated(Order $order): void
     {
-        updateOrderTotals($order->id);
+        // updateOrderTotals($order->id);
         // Update table's free status
         if ($order->status == 'completed' || $order->status == 'canceled') {
             if ($order->type == 'dine-in' && !empty($order->table_id)) {
