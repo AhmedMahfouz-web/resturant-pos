@@ -44,10 +44,11 @@ class OrderItemController extends Controller
     {
         $orderItem = OrderItem::where('id', $id)->with('order')->first();
 
+        if (!$orderItem) {
+            return response()->json(['error' => 'Order item not found'], 404);
+        }
+
         if ($orderItem->order->status == 'live') {
-            if (!$orderItem) {
-                return response()->json(['error' => 'Order item not found'], 404);
-            }
 
             $orderItem->update([
                 'quantity' => $request->quantity
