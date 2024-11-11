@@ -138,7 +138,7 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         $order->update($request->all());
-        updateOrderTotals($order->id);
+        updateOrderTotals($id);
 
         return response()->json(['message' => 'Order updated successfully', 'order' => $order->load("orderItems.product")]);
     }
