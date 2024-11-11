@@ -140,7 +140,7 @@ class OrderController extends Controller
         $order->update($request->all());
         updateOrderTotals($order->id);
 
-        return response()->json(['message' => 'Order updated successfully', 'order' => $order->load()]);
+        return response()->json(['message' => 'Order updated successfully', 'order' => $order->load("orderItems.product")]);
     }
 
     // Delete an order
