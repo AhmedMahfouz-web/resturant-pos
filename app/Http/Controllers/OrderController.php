@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\DecrementMaterials;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -144,10 +145,13 @@ class OrderController extends Controller
     }
 
     // Delete an order
-    public function cancelOrder($id)
+    public function cancelOrder($id, Request $request)
     {
         $order = Order::findOrFail($id);
         $order->update(['status' => 'canceled']);
+        if (!empty($request->waste)) {
+            DecrementMaterials::dispatch($order);
+        }
 
         return response()->json(['message' => 'Order canceled successfully']);
     }
@@ -173,6 +177,64 @@ class OrderController extends Controller
             'order' => $order->load('orderItems'),
         ]);
     }
+
+    public function splitOrder($order_id, array $orderItems)
+    {
+        // Retrieve the original order and validate its existence
+        $originalOrder = Order::with('orderItems')->find($order_id);
+        if (!$originalOrder) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        if ($originalOrder->status != 'live') {
+            return response()->json(['message' => 'Order is completed'], 403);
+        }
+
+        // Create a new order with the same metadata as the original
+        $newOrder = Order::create([
+            'user_id' => $originalOrder->user_id,
+            'table_id' => null,
+            'type' => 'takeaway',
+            'shift_id' => $originalOrder->shift_id,
+            'status' => 'live',
+            'tax' => 0,
+            'service' => 0,
+            'discount' => 0,
+            'total_amount' => 0,
+        ]);
+
+        // Loop through each item to move and split the quantities
+        foreach ($orderItems as $itemToMove) {
+            $orderItem = $originalOrder->orderItems()->find($itemToMove['id']);
+            if ($orderItem && $orderItem->quantity >= $itemToMove['quantity']) {
+
+                $orderItem->quantity -= $itemToMove['quantity'];
+                $orderItem->save();
+
+                // Create a new order item for the new order with the moved quantity
+                OrderItem::create([
+                    'order_id' => $newOrder->id,
+                    'product_id' => $orderItem->product_id,
+                    'price' => $orderItem->price,
+                    'quantity' => $itemToMove['quantity'],
+                ]);
+            }
+        }
+
+        // Remove any order items that now have a zero quantity
+        $originalOrder->orderItems()->where('quantity', 0)->delete();
+
+        updateOrderTotals($originalOrder->id);
+        updateOrderTotals($newOrder->id);
+
+
+        return response()->json([
+            'message' => 'Order split successfully',
+            'original_order' => $originalOrder,
+            'new_order' => $newOrder,
+        ], 200);
+    }
+
 
     // Generate ids for orders
     private function generate_new_order_id()
