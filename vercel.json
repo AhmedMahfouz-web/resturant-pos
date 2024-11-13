@@ -1,9 +1,13 @@
 {
-    "version": 2,
+    "version": 2, "builds": [
+    {
+      "src": "artisan serve --port 3000",
+      "use": "@vercel/node"
+    }
+
+  ],
       "framework": null,
-    "functions": {
-        "api/index.php": { "runtime": "vercel-php@0.6.0" }
-    },
+
     "routes": [{
         "src": "/(.*)",
         "dest": "/api/index.php"
