@@ -67,7 +67,7 @@ if (!function_exists('calculate_tax_and_service')) {
         }
     }
 
-    function calculate_discount($type, $amount, $sub_total)
+    function calculate_discount($type, $amount, $sub_total, $total_amount)
     {
         $disount_value = 0;
         if ($type == 'cash') {
@@ -76,6 +76,10 @@ if (!function_exists('calculate_tax_and_service')) {
             $discount_value = $sub_total * $amount / 100;
         }
 
-        return $discount_value;
+        if ($discount_value > $total_amount) {
+            return 0;
+        } else {
+            return $discount_value;
+        }
     }
 }

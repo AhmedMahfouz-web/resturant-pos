@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => 'mysql',
 
     /*
     |--------------------------------------------------------------------------
@@ -45,19 +45,19 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => "mysql://root:XEhehdxtzQXvXERadKUFSUaoWoLLOCPE@autorack.proxy.rlwy.net:38707/railway",
-            'host' => "resturant-pos.railway.internal",
-            'port' => "3306",
-            'database' => 'railway',
-            'username' => "root",
-            'password' => 'XEhehdxtzQXvXERadKUFSUaoWoLLOCPE',
-            // 'url' => env('DB_URL'),
-            // 'host' => env('DB_HOST', '127.0.0.1'),
-            // 'port' => env('DB_PORT', '3306'),
-            // 'database' => env('DB_DATABSE', 'sugar_rush'),
-            // 'username' => env('DB_USERNAME', 'root'),
-            // 'password' => env('DB_PASSWORD'),
-            // 'unix_socket' => env('DB_SOCKET'),
+            // 'url' => "mysql://root:XEhehdxtzQXvXERadKUFSUaoWoLLOCPE@autorack.proxy.rlwy.net:38707/railway",
+            // 'host' => "resturant-pos.railway.internal",
+            // 'port' => "3306",
+            // 'database' => 'railway',
+            // 'username' => "root",
+            // 'password' => 'XEhehdxtzQXvXERadKUFSUaoWoLLOCPE',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABSE', 'sugar_rush'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD'),
+            'unix_socket' => env('DB_SOCKET'),
             // 'charset' => 'utf8mb4',
             // 'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
@@ -71,12 +71,12 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'url' => "postgres://default:O1ZsMvmn5qUa@ep-autumn-hat-a448vptm-pooler.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require",
+            'host' => "ep-autumn-hat-a448vptm-pooler.us-east-1.aws.neon.tech",
+            'port' => '5432',
+            'database' => "verceldb",
+            'username' => "default",
+            'password' => "O1ZsMvmn5qUa",
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,

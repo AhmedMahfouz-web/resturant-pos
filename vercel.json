@@ -1,13 +1,12 @@
 {
-    "version": 2, "builds": [
-    {
-      "src": "artisan serve --port 3000",
-      "use": "@vercel/node"
-    }
-
-  ],
-      "framework": null,
-
+    "version": 2,
+     "builds": [
+        {
+            "src": "artisan serve --port 3000",
+            "use": "@vercel/node"
+        }
+    ],
+    "framework": null,
     "routes": [{
         "src": "/(.*)",
         "dest": "/api/index.php"

@@ -167,14 +167,43 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $discount_value = calculate_discount($request->type, $request->amount, $order->sub_total);
+        $discount_value = calculate_discount($request->type, $request->amount, $order->sub_total, $order->total_amount);
+
+        if ($discount_value == 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Discount is more than recipt value or empty'
+            ]);
+        }
 
         $order->update(['discount' => $discount_value]);
+        updateOrderTotals($id);
 
         return response()->json([
             'success' => 'true',
             'message' => 'Discount applied successfully',
-            'order' => $order->load('orderItems'),
+            'order' => $order,
+        ]);
+    }
+
+    // Delete discount to order
+    public function cancelDiscount($id)
+    {
+        $order = Order::find($id);
+        if (!$order) {
+            return response()->json([
+                'success' => 'false',
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        $order->update(['discount' => 0]);
+        updateOrderTotals($id);
+
+        return response()->json([
+            'success' => 'true',
+            'message' => 'Discount deleted successfully',
+            'order' => $order,
         ]);
     }
 
