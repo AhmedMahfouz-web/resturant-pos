@@ -84,7 +84,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::post('/{id}/discount', [OrderController::class, 'discount']);    // Update an order
         Route::get('/{id}/discount', [OrderController::class, 'cancelDiscount']);    // Update an order
         Route::put('/{id}', [OrderController::class, 'updateOrder']);          // Update an order
-        Route::post('/{id}/cancel', [OrderController::class, 'cencelOrder']);       // Cancel an order
+        Route::post('/{id}/cancel', [OrderController::class, 'cancelOrder']);       // Cancel an order
         Route::post('/orders/{orderId}/split', [OrderController::class, 'splitOrder']);  // Split order
     });
 
