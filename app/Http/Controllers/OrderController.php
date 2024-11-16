@@ -219,14 +219,19 @@ class OrderController extends Controller
             return response()->json(['message' => 'Order is completed'], 403);
         }
 
+        $newOrderId = $this->generate_new_order_id();
+
         // Create a new order with the same metadata as the original
         $newOrder = Order::create([
             'user_id' => $originalOrder->user_id,
             'table_id' => null,
+            'guest' => null,
             'type' => 'takeaway',
+            'code' => $newOrderId,
             'shift_id' => $originalOrder->shift_id,
             'status' => 'live',
             'tax' => 0,
+            'sub_total' => 0,
             'service' => 0,
             'discount' => 0,
             'total_amount' => 0,
