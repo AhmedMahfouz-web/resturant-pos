@@ -26,7 +26,7 @@ class ProductSeeder extends Seeder
                 'price' => $faker->randomFloat(2, 1, 20), // Price between $1 and $20
                 'description' => $faker->sentence,
                 'category_id' => $categories->random()->id,
-                'image' => $faker->imageUrl(360, 360, 'food', true)
+                'image' => null
             ]);
 
             // Assign random recipes to each product
