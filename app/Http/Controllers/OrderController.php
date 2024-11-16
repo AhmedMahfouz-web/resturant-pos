@@ -207,10 +207,10 @@ class OrderController extends Controller
         ]);
     }
 
-    public function splitOrder($order_id, array $orderItems)
+    public function splitOrder($id, array $orderItems)
     {
         // Retrieve the original order and validate its existence
-        $originalOrder = Order::with('orderItems')->find($order_id);
+        $originalOrder = Order::with('orderItems')->find($id);
         if (!$originalOrder) {
             return response()->json(['message' => 'Order not found'], 404);
         }
