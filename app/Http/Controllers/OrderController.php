@@ -207,7 +207,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function splitOrder($id, array $orderItems)
+    public function splitOrder($id, Request $request)
     {
         // Retrieve the original order and validate its existence
         $originalOrder = Order::with('orderItems')->find($id);
@@ -233,7 +233,7 @@ class OrderController extends Controller
         ]);
 
         // Loop through each item to move and split the quantities
-        foreach ($orderItems as $itemToMove) {
+        foreach ($request->items as $itemToMove) {
             $orderItem = $originalOrder->orderItems()->find($itemToMove['id']);
             if ($orderItem && $orderItem->quantity >= $itemToMove['quantity']) {
 
