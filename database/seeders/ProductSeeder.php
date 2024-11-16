@@ -28,6 +28,7 @@ class ProductSeeder extends Seeder
                 'category_id' => $categories->random()->id,
                 'image' => null
             ]);
+            
 
             // Assign random recipes to each product
             $recipes = Recipe::inRandomOrder()->take(rand(1, 2))->get();
