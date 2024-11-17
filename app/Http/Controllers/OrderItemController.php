@@ -15,29 +15,53 @@ class OrderItemController extends Controller
             'order_id' => 'required|exists:orders,id',
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'discount' => 'nullable|numeric|min:0', // Ensure discount is numeric and non-negative
         ]);
 
         $product = Product::find($request->product_id);
         $order = Order::find($request->order_id);
 
-        //Checking if there's and order
-        if (!empty($order)) {
-            //Checking if the order still live or not
-            if ($order->status == 'live') {
-                $orderItem = OrderItem::create([
-                    'order_id' => $request->order_id,
-                    'product_id' => $product->id,
-                    'price' => $product->price,
-                    'quantity' => $request->quantity,
-                ]);
-
-                return response()->json(['message' => 'OrderItem created successfully', 'order_item' => $orderItem->load(['order', 'product'])], 201);
-            } else {
-                return response()->json(['message' => 'Cannot update this order'], 403);
-            }
-        } else {
+        // Check if the order exists
+        if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
+
+        // Check if the order is still live
+        if ($order->status != 'live') {
+            return response()->json(['message' => 'Cannot update this order'], 403);
+        }
+
+        // Ensure the discount is not greater than the price
+        $discount = $request->discount ?? 0;  // If no discount is provided, default to 0
+        if ($discount > $product->price) {
+            return response()->json(['message' => 'Discount cannot be greater than the item price'], 400);
+        }
+
+        // Calculate the total amount for the item
+        $itemTotal = $product->price * $request->quantity;
+        $discountedAmount = $discount * $request->quantity; // Apply discount based on quantity
+        $totalAmount = $itemTotal - $discountedAmount;
+        $tax = $product->tax == 'true' ? calculatePercentage($totalAmount, 14) : 0;
+        $service = $product->service == 'true' ? calculatePercentage($totalAmount, 12) : 0;
+
+        // Create the order item
+        $orderItem = OrderItem::create([
+            'order_id' => $request->order_id,
+            'product_id' => $product->id,
+            'price' => $product->price,
+            'quantity' => $request->quantity,
+            'discount' => $discountedAmount,
+            'total_amount' => $itemTotal - $discountedAmount + $tax + $service,
+            'tax' => $tax,
+            'service' => $service,
+            'notes' => null,
+        ]);
+
+        // Return success response with the created order item
+        return response()->json([
+            'message' => 'OrderItem created successfully',
+            'order_item' => $orderItem->load(['order', 'product']),
+        ], 201);
     }
 
     public function update($id, Request $request)
@@ -54,6 +78,7 @@ class OrderItemController extends Controller
                 'quantity' => $request->quantity
             ]);
 
+            updateOrderTotals($orderItem->order_id);
 
             return response()->json(['message' => 'OrderItem updated successfully', 'order_item' => $orderItem->load(['order', 'product'])], 200);
         } else {

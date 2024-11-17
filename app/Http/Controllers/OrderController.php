@@ -82,23 +82,7 @@ class OrderController extends Controller
         $totalTax = 0;
         $totalService = 0;
         $totalDiscount = 0;
-
-        foreach ($validated['items'] as $item) {
-            $product = Product::find($item['product_id']);
-
-            $orderItemData = [
-                'price' => $product->price,
-                'quantity' => $item['quantity'],
-                'product' => $product // Attach the product for calculation
-            ];
-
-            $calculated = calculate_total_amount_for_order_item((object)$orderItemData);
-
-            $totalAmount += $calculated['total_amount'];
-            $totalTax += $calculated['tax'];
-            $totalService += $calculated['service'];
-            $totalDiscount += $calculated['discount'];
-        }
+        $grandTotal = 0;
 
         $orderData = [
             'user_id' => auth()->user()->id,
@@ -111,7 +95,7 @@ class OrderController extends Controller
             'discount' => $totalDiscount,
             'service' => $totalService,
             'sub_total' => $totalAmount,
-            'total_amount' => $totalAmount - $totalDiscount + $totalTax + $totalService,
+            'total_amount' => $grandTotal,
         ];
 
         if (!empty($request->table_id)) {
@@ -120,19 +104,63 @@ class OrderController extends Controller
 
         $order = Order::create($orderData);
 
+        // Collect order items data for batch insertion
+        $orderItemsData = [];
+
         foreach ($validated['items'] as $item) {
             $product = Product::find($item['product_id']);
-            OrderItem::create([
+
+            // Prepare order item data including the product for calculations
+            $orderItemData = [
                 'order_id' => $order->id,
+                'product' => $product,
                 'product_id' => $product->id,
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
                 'total_amount' => $product->price * $item['quantity'],
-                'tax' => $calculated['tax'],
-                'service' => $calculated['service'],
-                'discount' => $calculated['discount']
-            ]);
+            ];
+
+            $calculated = calculate_total_amount_for_order_item($request->type, (object)$orderItemData);
+
+            // Add calculated values to the order item data
+            $orderItemData['tax'] = $calculated['tax'];
+            $orderItemData['service'] = $calculated['service'];
+            $orderItemData['discount'] = $calculated['discount'];
+
+            // Create a new array for insertion excluding the 'product' key
+            $orderItemForInsert = [
+                'order_id' => $orderItemData['order_id'],
+                'product_id' => $orderItemData['product_id'],
+                'price' => $orderItemData['price'],
+                'quantity' => $orderItemData['quantity'],
+                'total_amount' => $orderItemData['total_amount'],
+                'tax' => $orderItemData['tax'],
+                'service' => $orderItemData['service'],
+                'discount' => $orderItemData['discount'],
+            ];
+
+            // Add to the array for batch insertion
+            $orderItemsData[] = $orderItemForInsert;
+
+            // Update totals
+            $totalAmount += $calculated['base_amount'];
+            $totalTax += $calculated['tax'];
+            $totalService += $calculated['service'];
+            $totalDiscount += $calculated['discount'];
+            $grandTotal += $calculated['total_amount'];
         }
+
+        // Perform batch insert
+        OrderItem::insert($orderItemsData);
+
+        // Update the order with the calculated totals
+        $order->update([
+            'tax' => $totalTax,
+            'discount' => $totalDiscount,
+            'service' => $totalService,
+            'sub_total' => $totalAmount,
+            'total_amount' => $grandTotal,
+        ]);
 
         return response()->json([
             'success' => 'true',
@@ -169,7 +197,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0', // Ensuring the discount is non-negative
-            'type' => 'required|in:percentage,fixed', // Validate type of discount
+            'type' => 'required|in:percentage,cash,saved', // Validate type of discount
         ]);
 
         // Retrieve the order and related items

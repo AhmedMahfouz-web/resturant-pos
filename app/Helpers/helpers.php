@@ -4,14 +4,16 @@ use App\Models\Order;
 
 if (!function_exists('calculate_tax_and_service')) {
 
-    function calculate_total_amount_for_order_item($item, $taxPercentage = 14, $servicePercentage = 12)
+    function calculate_total_amount_for_order_item($order_type, $item, $taxPercentage = 14, $servicePercentage = 12)
     {
         $baseAmount = $item->price * $item->quantity;
         $serviceAmount = 0;
 
         // Check if the product includes service
-        if ($item->product->service === 'true') {
-            $serviceAmount = ($servicePercentage / 100) * $baseAmount;
+        if ($order_type == 'dine-in') {
+            if ($item->product->service === 'true') {
+                $serviceAmount = ($servicePercentage / 100) * $baseAmount;
+            }
         }
 
         $taxAmount = 0;
@@ -69,8 +71,12 @@ if (!function_exists('calculate_tax_and_service')) {
                 }
 
                 $totalAfterDiscount = $itemTotal - $discountValue;
-                $serviceAmount = $product->service == 'true' ? calculatePercentage($totalAfterDiscount, 12) : 0;
-                $taxAmount = $product->tax == 'true' ? calculatePercentage($totalAfterDiscount + $serviceAmount, 14) : 0;
+                if ($order->type == 'dine-in') {
+                    $serviceAmount = $product->service == 'true' ? $totalAfterDiscount * 0.12 : 0;
+                } else {
+                    $serviceAmount = 0;
+                }
+                $taxAmount = $product->tax == 'true' ? ($totalAfterDiscount + $serviceAmount) * 0.14  : 0;
 
                 // Accumulate values
                 $totalAmount += $itemTotal;
