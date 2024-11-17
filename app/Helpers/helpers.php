@@ -81,8 +81,6 @@ if (!function_exists('calculate_tax_and_service')) {
                 // Accumulate values
                 $totalAmount += $itemTotal;
                 $totalDiscount += $discountValue;
-                $totalService += $serviceAmount;
-                $totalTax += $taxAmount;
 
                 $item->update([
                     'sub_total' => $itemTotal,
@@ -93,15 +91,16 @@ if (!function_exists('calculate_tax_and_service')) {
                 ]);
             }
 
+            $service_tax = calculate_tax_service($totalAmount - $totalDiscount);
             // Calculate grand total for the order
-            $grandTotal = $totalAmount - $totalDiscount + $totalService + $totalTax;
+            $grandTotal = $totalAmount - $totalDiscount + $service_tax['service'] + $service_tax['tax'];
 
             // Update the order with calculated totals
             $order->update([
                 'sub_total' => $totalAmount,
                 'total_amount' => $grandTotal,
-                'tax' => $totalTax,
-                'service' => $totalService,
+                'tax' => $service_tax['tax'],
+                'service' => $service_tax['service'],
                 'discount' => $totalDiscount,
             ]);
         }
@@ -148,5 +147,16 @@ if (!function_exists('calculate_tax_and_service')) {
         } else {
             return $discount_value;
         }
+    }
+
+    function calculate_tax_service($subTotalAfterDiscount)
+    {
+
+        $service = $subTotalAfterDiscount * 0.12;
+        $tax = ($subTotalAfterDiscount + $service) * 0.14;
+        return [
+            'tax' => $tax,
+            'service' => $service
+        ];
     }
 }

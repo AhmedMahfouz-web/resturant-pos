@@ -223,9 +223,13 @@ class OrderController extends Controller
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 
+        $service_tax = calculate_tax_service($order->sub_total - $orderDiscountValue);
+
         // Update the order with the whole-order discount
         $order->discount = $orderDiscountValue;
-        $order->total_amount = $order->sub_total + $order->service + $order->tax - $order->discount;
+        $order->total_amount = $order->sub_total + $service_tax['service'] + $service_tax['tax'] - $order->discount;
+        $order->service = $service_tax['service'];
+        $order->tax = $service_tax['tax'];
         $order->save();
 
         return response()->json([

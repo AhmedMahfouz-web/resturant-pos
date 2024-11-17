@@ -98,4 +98,25 @@ class OrderItemController extends Controller
 
         return response()->json(['message' => 'OrderItem deleted successfully'], 200);
     }
+
+    public function add_note($id, Request $request)
+    {
+        $orderItem = OrderItem::find($id);
+
+        if (!$orderItem) {
+            return response()->json(['error' => 'OrderItem not found'], 404);
+        }
+
+        $orderItem->update([
+            'notes' => $request->notes
+        ]);
+
+        return response()->json(
+            [
+                'message' => 'Notes added successfully',
+                'order_item' => $orderItem->load(['order', 'product'])
+            ],
+            200
+        );
+    }
 }

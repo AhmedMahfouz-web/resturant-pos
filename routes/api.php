@@ -79,19 +79,20 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/live', [OrderController::class, 'liveOrders']);           // Get live orders
         Route::get('/completed', [OrderController::class, 'completedOrder']);  // Get completed orders
         Route::get('/canceled', [OrderController::class, 'canceledOrder']);    // Get canceled orders
-        Route::get('/show/{id}', [OrderController::class, 'show']);    // Show Specific order
+        Route::get('/show/{id}', [OrderController::class, 'show']);            // Show Specific order
         Route::post('/', [OrderController::class, 'createOrder']);             // Create a new order
-        Route::post('/{id}/discount', [OrderController::class, 'discount']);    // Update an order
+        Route::post('/{id}/discount', [OrderController::class, 'discount']);   // Update an order
         Route::get('/{id}/discount', [OrderController::class, 'cancelDiscount']);    // Update an order
-        Route::put('/{id}', [OrderController::class, 'updateOrder']);          // Update an order
+        Route::put('/{id}', [OrderController::class, 'updateOrder']);                // Update an order
         Route::post('/{id}/cancel', [OrderController::class, 'cancelOrder']);       // Cancel an order
-        Route::post('/{id}/split', [OrderController::class, 'splitOrder']);  // Split order
+        Route::post('/{id}/split', [OrderController::class, 'splitOrder']);         // Split order
     });
 
     Route::prefix('orderItem')->group(function () {
         Route::get('/', [OrderItemController::class, 'index']);               // Get all orderItems
         Route::post('/', [OrderItemController::class, 'create']);             // Create a new orderItem
         Route::put('/{id}', [OrderItemController::class, 'update']);          // Update an orderItem
+        Route::put('/{id}', [OrderItemController::class, 'add_note']);        // Update an orderItem
         Route::delete('/{id}', [OrderItemController::class, 'destroy']);      // Delete an orderItem
     });
 
