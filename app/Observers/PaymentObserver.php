@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\OrderEvents;
 use App\Jobs\DecrementMaterials;
 use App\Models\Order;
 use App\Models\Payment;
@@ -14,6 +15,8 @@ class PaymentObserver
 
         // Decrement materialas for each product
         DecrementMaterials::dispatch($order);
+
+        event(new OrderEvents($order));
 
         // Another way to decrement materials if the first one is not working
 

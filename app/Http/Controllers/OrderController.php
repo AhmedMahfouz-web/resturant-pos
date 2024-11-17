@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\DecrementMaterials;
+use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -78,53 +79,88 @@ class OrderController extends Controller
         $newOrderId = $this->generate_new_order_id();
 
         $totalAmount = 0;
+        $totalTax = 0;
+        $totalService = 0;
+        $totalDiscount = 0;
+        $grandTotal = 0;
+
+        $orderData = [
+            'user_id' => auth()->user()->id,
+            'code' => $newOrderId,
+            'guest' => $request->guest,
+            'type' => $request->type,
+            'shift_id' => $request->shift_id,
+            'status' => 'live',
+            'tax' => $totalTax,
+            'discount' => $totalDiscount,
+            'service' => $totalService,
+            'sub_total' => $totalAmount,
+            'total_amount' => $grandTotal,
+        ];
+
+        if (!empty($request->table_id)) {
+            $orderData['table_id'] = $request->table_id;
+        }
+
+        $order = Order::create($orderData);
+
+        // Collect order items data for batch insertion
+        $orderItemsData = [];
+
         foreach ($validated['items'] as $item) {
             $product = Product::find($item['product_id']);
-            $totalAmount += $product->price * $item['quantity'];
-        }
 
-        $charges = calculate_tax_and_service($totalAmount, $request->type);
-        if (empty($request->table_id)) {
-            $order = Order::create([
-                'user_id' => auth()->user()->id,
-                'code' => $newOrderId,
-                'guest' => $request->guest,
-                'type' => $request->type,
-                'shift_id' => $request->shift_id,
-                'status' => 'live',
-                'tax' => $charges['tax'],
-                'discount' => $charges['discount_value'],
-                'service' => $charges['service'],
-                'sub_total' => $totalAmount,
-                'total_amount' => $charges['grand_total'],
-            ]);
-        } else {
-            $order = Order::create([
-                'user_id' => auth()->user()->id,
-                'code' => $newOrderId,
-                'guest' => $request->guest,
-                'type' => $request->type,
-                'table_id' => $request->table_id,
-                'shift_id' => $request->shift_id,
-                'status' => 'live',
-                'tax' => $charges['tax'],
-                'discount' => $charges['discount_value'],
-                'service' => $charges['service'],
-                'sub_total' => $totalAmount,
-                'total_amount' => $charges['grand_total'],
-            ]);
-        }
-
-        foreach ($request->items as $item) {
-            $product = Product::find($item['product_id']);
-            OrderItem::create([
+            // Prepare order item data including the product for calculations
+            $orderItemData = [
                 'order_id' => $order->id,
+                'product' => $product,
                 'product_id' => $product->id,
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
-            ]);
+                'total_amount' => $product->price * $item['quantity'],
+            ];
+
+            $calculated = calculate_total_amount_for_order_item($request->type, (object)$orderItemData);
+
+            // Add calculated values to the order item data
+            $orderItemData['tax'] = $calculated['tax'];
+            $orderItemData['service'] = $calculated['service'];
+            $orderItemData['discount'] = $calculated['discount'];
+
+            // Create a new array for insertion excluding the 'product' key
+            $orderItemForInsert = [
+                'order_id' => $orderItemData['order_id'],
+                'product_id' => $orderItemData['product_id'],
+                'price' => $orderItemData['price'],
+                'quantity' => $orderItemData['quantity'],
+                'total_amount' => $orderItemData['total_amount'],
+                'tax' => $orderItemData['tax'],
+                'service' => $orderItemData['service'],
+                'discount' => $orderItemData['discount'],
+            ];
+
+            // Add to the array for batch insertion
+            $orderItemsData[] = $orderItemForInsert;
+
+            // Update totals
+            $totalAmount += $calculated['base_amount'];
+            $totalTax += $calculated['tax'];
+            $totalService += $calculated['service'];
+            $totalDiscount += $calculated['discount'];
+            $grandTotal += $calculated['total_amount'];
         }
 
+        // Perform batch insert
+        OrderItem::insert($orderItemsData);
+
+        // Update the order with the calculated totals
+        $order->update([
+            'tax' => $totalTax,
+            'discount' => $totalDiscount,
+            'service' => $totalService,
+            'sub_total' => $totalAmount,
+            'total_amount' => $grandTotal,
+        ]);
 
         return response()->json([
             'success' => 'true',
@@ -159,32 +195,47 @@ class OrderController extends Controller
     // Add discount to order
     public function discount(Request $request, $id)
     {
-        $order = Order::find($id);
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0', // Ensuring the discount is non-negative
+            'type' => 'required|in:percentage,cash,saved', // Validate type of discount
+        ]);
+
+        // Retrieve the order and related items
+        $order = Order::with('orderItems')->find($id);
         if (!$order) {
-            return response()->json([
-                'success' => 'false',
-                'message' => 'Order not found'
-            ], 404);
+            return response()->json(['message' => 'Order not found'], 404);
         }
 
-        $discount_value = calculate_discount($request->type, $request->amount, $order->sub_total, $order->total_amount);
+        // Calculate current total item-level discounts
+        $currentItemDiscounts = $order->orderItems->sum('discount');
 
-        if ($discount_value == 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Discount is more than recipt value or empty'
-            ]);
+        // Apply whole-order discount based on type
+        if ($validated['type'] == 'cash') {
+            $orderDiscountValue = $validated['amount'];
+        } else {
+            $orderDiscountValue = ($order->sub_total * $validated['amount']) / 100;
         }
 
-        $order->update(['discount' => $discount_value]);
-        updateOrderTotals($id);
+        // Ensure whole-order discount + item-level discounts do not exceed sub-total
+        if ($orderDiscountValue + $currentItemDiscounts > $order->sub_total) {
+            return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
+        }
+
+        $service_tax = calculate_tax_service($order->sub_total - $orderDiscountValue);
+
+        // Update the order with the whole-order discount
+        $order->discount = $orderDiscountValue;
+        $order->total_amount = $order->sub_total + $service_tax['service'] + $service_tax['tax'] - $order->discount;
+        $order->service = $service_tax['service'];
+        $order->tax = $service_tax['tax'];
+        $order->save();
 
         return response()->json([
-            'success' => 'true',
-            'message' => 'Discount applied successfully',
+            'message' => 'Whole-order discount applied successfully',
             'order' => $order,
         ]);
     }
+
 
     // Delete discount to order
     public function cancelDiscount($id)

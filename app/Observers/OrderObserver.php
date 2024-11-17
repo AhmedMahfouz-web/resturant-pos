@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\OrderEvents;
 use App\Models\Order;
 use App\Models\Table;
 
@@ -14,6 +15,8 @@ class OrderObserver
             $table = Table::find($order->table_id);
             $table->update(['is_free' => 0]);
         }
+
+        event(new OrderEvents($order));
     }
 
     public function updated(Order $order): void
@@ -26,5 +29,7 @@ class OrderObserver
                 $table->update(['is_free' => 1]);
             }
         }
+
+        event(new OrderEvents($order));
     }
 }

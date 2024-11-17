@@ -124,4 +124,6 @@ class ReportController extends Controller
         // Step 2.9: Return the monthly report as a JSON response
         return response()->json($dailyReport);
     }
+
+    
 }

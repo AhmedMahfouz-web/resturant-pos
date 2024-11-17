@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\OrderEvents;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -16,10 +17,12 @@ class OrderItemObserver
         $product = Product::where('id', $orderItem->product_id)->with('recipe', function ($query) {
             $query->with('materials');
         })->first();
+        $order = Order::find($orderItem->order_id);
         $quantityOrdered = $orderItem->quantity;
 
         // $this->decrementMaterials($product, $quantityOrdered);
         updateOrderTotals($orderItem->order_id);
+        event(new OrderEvents($order));
     }
 
     /**
@@ -27,8 +30,9 @@ class OrderItemObserver
      */
     public function updated(OrderItem $orderItem): void
     {
-
-        updateOrderTotals($orderItem->order_id);
+        $order = Order::find($orderItem->order_id);
+        event(new OrderEvents($order));
+        // updateOrderTotals($orderItem->order_id);
     }
 
     /**
@@ -36,6 +40,8 @@ class OrderItemObserver
      */
     public function deleted(OrderItem $orderItem): void
     {
+        $order = Order::find($orderItem->order_id);
+        event(new OrderEvents($order));
         updateOrderTotals($orderItem->order_id);
     }
 
