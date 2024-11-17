@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('image')->nullable();
-            $table->enum('vat', ['true', 'false']);
+            $table->enum('tax', ['true', 'false']);
+            $table->enum('service', ['true', 'false']);
             $table->enum('status', ['true', 'false']);
             $table->text('description')->nullable();
             $table->decimal('price', 10, 2);
+            $table->string('discount_type')->nullable();
+            $table->decimal('discount', 10, 2)->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

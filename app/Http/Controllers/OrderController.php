@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\DecrementMaterials;
+use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -78,53 +79,60 @@ class OrderController extends Controller
         $newOrderId = $this->generate_new_order_id();
 
         $totalAmount = 0;
+        $totalTax = 0;
+        $totalService = 0;
+        $totalDiscount = 0;
+
         foreach ($validated['items'] as $item) {
             $product = Product::find($item['product_id']);
-            $totalAmount += $product->price * $item['quantity'];
+
+            $orderItemData = [
+                'price' => $product->price,
+                'quantity' => $item['quantity'],
+                'product' => $product // Attach the product for calculation
+            ];
+
+            $calculated = calculate_total_amount_for_order_item((object)$orderItemData);
+
+            $totalAmount += $calculated['total_amount'];
+            $totalTax += $calculated['tax'];
+            $totalService += $calculated['service'];
+            $totalDiscount += $calculated['discount'];
         }
 
-        $charges = calculate_tax_and_service($totalAmount, $request->type);
-        if (empty($request->table_id)) {
-            $order = Order::create([
-                'user_id' => auth()->user()->id,
-                'code' => $newOrderId,
-                'guest' => $request->guest,
-                'type' => $request->type,
-                'shift_id' => $request->shift_id,
-                'status' => 'live',
-                'tax' => $charges['tax'],
-                'discount' => $charges['discount_value'],
-                'service' => $charges['service'],
-                'sub_total' => $totalAmount,
-                'total_amount' => $charges['grand_total'],
-            ]);
-        } else {
-            $order = Order::create([
-                'user_id' => auth()->user()->id,
-                'code' => $newOrderId,
-                'guest' => $request->guest,
-                'type' => $request->type,
-                'table_id' => $request->table_id,
-                'shift_id' => $request->shift_id,
-                'status' => 'live',
-                'tax' => $charges['tax'],
-                'discount' => $charges['discount_value'],
-                'service' => $charges['service'],
-                'sub_total' => $totalAmount,
-                'total_amount' => $charges['grand_total'],
-            ]);
+        $orderData = [
+            'user_id' => auth()->user()->id,
+            'code' => $newOrderId,
+            'guest' => $request->guest,
+            'type' => $request->type,
+            'shift_id' => $request->shift_id,
+            'status' => 'live',
+            'tax' => $totalTax,
+            'discount' => $totalDiscount,
+            'service' => $totalService,
+            'sub_total' => $totalAmount,
+            'total_amount' => $totalAmount - $totalDiscount + $totalTax + $totalService,
+        ];
+
+        if (!empty($request->table_id)) {
+            $orderData['table_id'] = $request->table_id;
         }
 
-        foreach ($request->items as $item) {
+        $order = Order::create($orderData);
+
+        foreach ($validated['items'] as $item) {
             $product = Product::find($item['product_id']);
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $product->id,
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
+                'total_amount' => $product->price * $item['quantity'],
+                'tax' => $calculated['tax'],
+                'service' => $calculated['service'],
+                'discount' => $calculated['discount']
             ]);
         }
-
 
         return response()->json([
             'success' => 'true',
@@ -159,32 +167,45 @@ class OrderController extends Controller
     // Add discount to order
     public function discount(Request $request, $id)
     {
-        $order = Order::find($id);
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0', // Ensuring the discount is non-negative
+            'type' => 'required|in:percentage,fixed', // Validate type of discount
+        ]);
+
+        // Retrieve the order and related items
+        $order = Order::with('orderItems')->find($id);
         if (!$order) {
-            return response()->json([
-                'success' => 'false',
-                'message' => 'Order not found'
-            ], 404);
+            return response()->json(['message' => 'Order not found'], 404);
         }
 
-        $discount_value = calculate_discount($request->type, $request->amount, $order->sub_total, $order->total_amount);
+        // Calculate current total item-level discounts
+        $currentItemDiscounts = $order->orderItems->sum('discount');
 
-        if ($discount_value == 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Discount is more than recipt value or empty'
-            ]);
+        // Apply whole-order discount based on type
+        if ($validated['type'] == 'cash') {
+            $orderDiscountValue = $validated['amount'];
+        } else {
+            $orderDiscountValue = ($order->sub_total * $validated['amount']) / 100;
         }
 
-        $order->update(['discount' => $discount_value]);
-        updateOrderTotals($id);
+        // Ensure whole-order discount + item-level discounts do not exceed sub-total
+        if (
+            $orderDiscountValue + $currentItemDiscounts > $order->sub_total
+        ) {
+            return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
+        }
+
+        // Update the order with the whole-order discount
+        $order->discount = $orderDiscountValue;
+        $order->total_amount = $order->sub_total + $order->service + $order->tax - $order->discount;
+        $order->save();
 
         return response()->json([
-            'success' => 'true',
-            'message' => 'Discount applied successfully',
+            'message' => 'Whole-order discount applied successfully',
             'order' => $order,
         ]);
     }
+
 
     // Delete discount to order
     public function cancelDiscount($id)
