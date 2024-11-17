@@ -217,9 +217,7 @@ class OrderController extends Controller
         }
 
         // Ensure whole-order discount + item-level discounts do not exceed sub-total
-        if (
-            $orderDiscountValue + $currentItemDiscounts > $order->sub_total
-        ) {
+        if ($orderDiscountValue + $currentItemDiscounts > $order->sub_total) {
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 

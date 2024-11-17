@@ -92,8 +92,9 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/', [OrderItemController::class, 'index']);               // Get all orderItems
         Route::post('/', [OrderItemController::class, 'create']);             // Create a new orderItem
         Route::put('/{id}', [OrderItemController::class, 'update']);          // Update an orderItem
-        Route::put('/{id}', [OrderItemController::class, 'add_note']);        // Update an orderItem
+        Route::put('/{id}/add_note', [OrderItemController::class, 'add_note']);        // Note an orderItem
         Route::delete('/{id}', [OrderItemController::class, 'destroy']);      // Delete an orderItem
+        Route::post('/{id}/discount', [OrderItemController::class, 'discount']); // Discount on orderItem
     });
 
     Route::prefix('tables')->group(function () {

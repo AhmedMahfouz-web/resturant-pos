@@ -119,4 +119,47 @@ class OrderItemController extends Controller
             200
         );
     }
+
+    public function discount(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'type' => 'required|in:percentage,cash,saved',
+        ]);
+
+        $orderItem = OrderItem::with('product', 'order')->find($id);
+
+        if (!$orderItem) {
+            return response()->json(['message' => 'Order item not found'], 404);
+        }
+
+        $itemTotal = $orderItem->price * $orderItem->quantity;
+        if ($validated['type'] == 'cash') {
+            $orderDiscountValue = $validated['amount'];
+        } else {
+            $orderDiscountValue = ($orderItem->sub_total * $validated['amount']) / 100;
+        }
+
+        // Ensure discount does not exceed the item total
+        if ($orderDiscountValue > $orderItem->sub_total) {
+            return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
+        }
+
+        $service_tax = calculate_tax_service($orderItem->sub_total - $orderDiscountValue);
+
+        // Apply the discount and update the order item
+        $orderItem->discount = $validated['discount'];
+        $orderItem->total_amount = $orderItem->sub_total + $service_tax['service'] + $service_tax['tax'] - $orderItem->discount;
+        $orderItem->service = $service_tax['service'];
+        $orderItem->tax = $service_tax['tax'];
+        $orderItem->save();
+
+        // Update the order totals
+        updateOrderTotals($orderItem->order_id);
+
+        return response()->json([
+            'message' => 'Discount applied to order item successfully',
+            'order_item' => $orderItem->load(['order', 'product']),
+        ]);
+    }
 }
