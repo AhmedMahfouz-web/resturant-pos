@@ -43,11 +43,11 @@ return [
 
         'websockets' => [
             'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
+            'key' => "mylocal1234",
+            'secret' => "secret1234",
+            'app_id' => 12345,
             'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
+                'cluster' => "mt1",
                 'encrypted' => true,
                 'host' => '127.0.0.1',
                 'port' => 6001,

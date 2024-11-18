@@ -12,7 +12,6 @@ use Illuminate\Queue\SerializesModels;
 
 class OrderEvents
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
