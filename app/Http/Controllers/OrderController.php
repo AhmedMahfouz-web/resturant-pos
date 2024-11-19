@@ -117,6 +117,7 @@ class OrderController extends Controller
                 'product_id' => $product->id,
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
+                'sub_total' => $product->price * $item['quantity'],
                 'total_amount' => $product->price * $item['quantity'],
             ];
 
@@ -133,6 +134,7 @@ class OrderController extends Controller
                 'product_id' => $orderItemData['product_id'],
                 'price' => $orderItemData['price'],
                 'quantity' => $orderItemData['quantity'],
+                'sub_total' => $orderItemData['sub_total'],
                 'total_amount' => $orderItemData['total_amount'],
                 'tax' => $orderItemData['tax'],
                 'service' => $orderItemData['service'],

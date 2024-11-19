@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->nullable();
             $table->decimal('tax', 10, 2);
             $table->decimal('service', 10, 2);
+            $table->decimal('sub_total', 10, 2);
             $table->decimal('price', 10, 2);
             $table->string('notes')->nullable();
             $table->timestamps();

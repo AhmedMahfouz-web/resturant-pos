@@ -15,6 +15,7 @@ class OrderItem extends Model
         'quantity',
         'price',
         'discount',
+        'sub_total',
         'total_amount',
         'tax',
         'service',
