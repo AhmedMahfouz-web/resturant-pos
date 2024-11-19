@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => 'websockets',
 
     /*
     |--------------------------------------------------------------------------
@@ -32,27 +32,30 @@ return [
 
         'pusher' => [
             'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
+            'key' => "12345",
+            'secret' => "12345",
+            'app_id' => "12345",
             'options' => [
-                'cluster' => 'eu',
-                'useTLS' => true
+                'cluster' => env('PUSHER_APP_CLUSTER'),
+                'encrypted' => true,
+                'host' => '127.0.0.1',
+                'port' => 6001,
+                'scheme' => 'http'
             ],
         ],
 
         'websockets' => [
             'driver' => 'pusher',
-            'key' => "mylocal1234",
-            'secret' => "secret1234",
-            'app_id' => 12345,
-            'options' => [
-                'cluster' => "mt1",
-                'encrypted' => true,
-                'host' => '127.0.0.1',
-                'port' => 6001,
-                'scheme' => 'http',
-            ],
+    'key' => "12345",
+    'secret' => "12345",
+    'app_id' => "12345",
+    'options' => [
+        'cluster' => "mt1",
+        'useTLS' => false, // Use `false` for local WebSockets
+        'host' => '127.0.0.1',
+        'port' => 6001, // Laravel WebSockets default port
+        'scheme' => 'http', // Use `https` for SSL
+    ],
         ],
 
         'ably' => [

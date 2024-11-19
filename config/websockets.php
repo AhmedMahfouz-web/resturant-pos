@@ -23,13 +23,13 @@ return [
      */
     'apps' => [
         [
-            'id' => env('PUSHER_APP_ID'),
-            'name' => env('APP_NAME'),
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'path' => env('PUSHER_APP_PATH'),
+            'id' => "12345", // Matches PUSHER_APP_ID in .env
+            'name' => 'local',
+            'key' => "12345", // Matches PUSHER_APP_KEY in .env
+            'secret' => "12345", // Matches PUSHER_APP_SECRET in .env
+            'path' => '',
             'capacity' => null,
-            'enable_client_messages' => false,
+            'enable_client_messages' => true,
             'enable_statistics' => true,
         ],
     ],

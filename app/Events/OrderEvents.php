@@ -10,24 +10,24 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderEvents
-{
 
+class OrderEvents implements ShouldBroadcast  // Make sure this is here
+{
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
 
     public function __construct($order)
     {
-        $this->order = $order;
+        $this->order = $order->load('orderItems.product');
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
         return ['orders-channel'];
     }
 
-    public function broadcastAs()
+    public function broadcastAs(): string
     {
         return 'order-updated';
     }
