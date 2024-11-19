@@ -51,6 +51,7 @@ class OrderItemController extends Controller
             'price' => $product->price,
             'quantity' => $request->quantity,
             'discount' => $discountedAmount,
+            'sub_total' => $itemTotal,
             'total_amount' => $itemTotal - $discountedAmount + $tax + $service,
             'tax' => $tax,
             'service' => $service,
