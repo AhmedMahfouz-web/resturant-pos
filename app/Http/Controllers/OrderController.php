@@ -116,6 +116,8 @@ class OrderController extends Controller
                 'product' => $product,
                 'product_id' => $product->id,
                 'price' => $product->price,
+                'discount_type' => null,
+                'discount' => null,
                 'quantity' => $item['quantity'],
                 'sub_total' => $product->price * $item['quantity'],
             ];
@@ -126,6 +128,8 @@ class OrderController extends Controller
             $orderItemData['tax'] = $calculated['tax'];
             $orderItemData['service'] = $calculated['service'];
             $orderItemData['discount'] = $calculated['discount'];
+            $orderItemData['discount_value'] = $calculated['discount_value'];
+            $orderItemData['discount_type'] = $calculated['discount_type'];
             $orderItemData['total_amount'] = $calculated['total_amount'];
 
             // Create a new array for insertion excluding the 'product' key
@@ -160,10 +164,12 @@ class OrderController extends Controller
         // Update the order with the calculated totals
         $order->update([
             'tax' => $totalTax,
-            'discount' => $totalDiscount,
+            'discount' => 0,
             'service' => $totalService,
             'sub_total' => $totalAmount,
             'total_amount' => $grandTotal,
+            'discount_value' => $totalDiscount,
+            'discount_type' => null,
         ]);
 
         return response()->json([

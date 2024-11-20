@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->nullable();
             $table->foreignId('discount_id')->nullable()->references('id')->on('discounts')->onDelete('cascade');
             $table->decimal('discount_value', 10, 2)->nullable();
-            $table->enum('discount_type', ['cash', 'percentage', 'saved']);
+            $table->enum('discount_type', ['cash', 'percentage', 'saved'])->nullable();
             $table->decimal('tax', 10, 2)->nullable();
             $table->decimal('service', 10, 2)->nullable();
             $table->decimal('sub_total', 10, 2);

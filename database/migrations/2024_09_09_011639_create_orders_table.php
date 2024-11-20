@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2);
             $table->decimal('discount', 10, 2)->nullable();
             $table->decimal('discount_value', 10, 2)->nullable();
-            $table->enum('discount_type', ['cash', 'percentage', 'saved']);
+            $table->enum('discount_type', ['cash', 'percentage', 'saved'])->nullable();
             $table->decimal('tax', 10, 2);
             $table->decimal('service', 10, 2);
             $table->timestamp('close_at', precision: 0)->nullable();
