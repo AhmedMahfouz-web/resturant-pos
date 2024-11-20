@@ -146,7 +146,7 @@ class OrderItemController extends Controller
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 
-        $service_tax = calculate_tax_service($orderItem->sub_total - $orderDiscountValue);
+        $service_tax = calculate_tax_service($orderItem->sub_total - $orderDiscountValue, Order::select('type')->where('id', $orderItem->id)->first());
 
         // Apply the discount and update the order item
         $orderItem->discount = $validated['discount'];

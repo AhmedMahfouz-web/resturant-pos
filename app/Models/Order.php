@@ -17,7 +17,10 @@ class Order extends Model
         'code',
         'tax',
         'service',
-        'discount',
+        'discount_value', // Calculated discount value
+        'discount_type', // {percentage, cash, saved}
+        'discount_id', // Discount id form Discount model
+        'discount', // Discount value without orderItems's discounts
         'sub_total',
         'total_amount',
         'close_at',
@@ -53,5 +56,10 @@ class Order extends Model
     public function shift()
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function discountSaved()
+    {
+        return $this->hasOne(Discount::class);
     }
 }

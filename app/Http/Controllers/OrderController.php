@@ -118,7 +118,6 @@ class OrderController extends Controller
                 'price' => $product->price,
                 'quantity' => $item['quantity'],
                 'sub_total' => $product->price * $item['quantity'],
-                'total_amount' => $product->price * $item['quantity'],
             ];
 
             $calculated = calculate_total_amount_for_order_item($request->type, (object)$orderItemData);
@@ -127,6 +126,7 @@ class OrderController extends Controller
             $orderItemData['tax'] = $calculated['tax'];
             $orderItemData['service'] = $calculated['service'];
             $orderItemData['discount'] = $calculated['discount'];
+            $orderItemData['total_amount'] = $calculated['total_amount'];
 
             // Create a new array for insertion excluding the 'product' key
             $orderItemForInsert = [
@@ -139,6 +139,8 @@ class OrderController extends Controller
                 'tax' => $orderItemData['tax'],
                 'service' => $orderItemData['service'],
                 'discount' => $orderItemData['discount'],
+                'discount_value' => $orderItemData['discount_value'],
+                'discount_type' => $orderItemData['discount_type'],
             ];
 
             // Add to the array for batch insertion
@@ -223,7 +225,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 
-        $service_tax = calculate_tax_service($order->sub_total - $orderDiscountValue);
+        $service_tax = calculate_tax_service($order->sub_total - $orderDiscountValue, $order->type);
 
         // Update the order with the whole-order discount
         $order->discount = $orderDiscountValue;
@@ -290,30 +292,57 @@ class OrderController extends Controller
             'total_amount' => 0,
         ]);
 
+        // Collect order items data for batch insertion
+        $orderItemsData = [];
+        $totalAmount = 0;
+        $totalTax = 0;
+        $totalService = 0;
+        $totalDiscount = 0;
+
         // Loop through each item to move and split the quantities
         foreach ($request->items as $itemToMove) {
             $orderItem = $originalOrder->orderItems()->find($itemToMove['id']);
             if ($orderItem && $orderItem->quantity >= $itemToMove['quantity']) {
-
+                // Update the original order item quantity
                 $orderItem->quantity -= $itemToMove['quantity'];
                 $orderItem->save();
 
-                // Create a new order item for the new order with the moved quantity
-                OrderItem::create([
+                // Prepare new order item data for the new order
+                $orderItemData = [
                     'order_id' => $newOrder->id,
                     'product_id' => $orderItem->product_id,
                     'price' => $orderItem->price,
                     'quantity' => $itemToMove['quantity'],
-                ]);
+                ];
+
+                // Calculate totals for the new order item
+                $calculated = calculate_total_amount_for_order_item($newOrder->type, (object)$orderItemData);
+                $orderItemData['tax'] = $calculated['tax'];
+                $orderItemData['service'] = $calculated['service'];
+                $orderItemData['discount'] = $calculated['discount'];
+                $orderItemData['sub_total'] = $calculated['base_total'];
+                $orderItemData['total_amount'] = $calculated['total_amount'];
+
+                // Add to the array for batch insertion
+                $orderItemsData[] = $orderItemData;
+
+                // Update totals
+                $totalAmount += $calculated['base_amount'];
+                $totalTax += $calculated['tax'];
+                $totalService += $calculated['service'];
+                $totalDiscount += $calculated['discount'];
             }
         }
+
+        // Perform batch insert for new order items
+        OrderItem::insert($orderItemsData);
 
         // Remove any order items that now have a zero quantity
         $originalOrder->orderItems()->where('quantity', 0)->delete();
 
+        // Update the totals for both orders
         updateOrderTotals($originalOrder->id);
         updateOrderTotals($newOrder->id);
-
 
         return response()->json([
             'message' => 'Order split successfully',

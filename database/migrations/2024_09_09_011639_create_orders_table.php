@@ -18,11 +18,14 @@ return new class extends Migration
             $table->foreignId('table_id')->nullable()->references('id')->on('tables')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->references('id')->on('users')->constrained()->onDelete('cascade');
             $table->foreignId('shift_id')->references('id')->on('shifts')->onDelete('cascade');
+            $table->foreignId('discount_id')->nullable()->references('id')->on('discounts')->onDelete('cascade');
             $table->string('guest')->nullable();
             $table->enum('status', ['live', 'completed', 'canceled']);
             $table->decimal('sub_total', 10, 2);
             $table->decimal('total_amount', 10, 2);
             $table->decimal('discount', 10, 2)->nullable();
+            $table->decimal('discount_value', 10, 2)->nullable();
+            $table->enum('discount_type', ['cash', 'percentage', 'saved']);
             $table->decimal('tax', 10, 2);
             $table->decimal('service', 10, 2);
             $table->timestamp('close_at', precision: 0)->nullable();

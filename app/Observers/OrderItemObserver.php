@@ -22,7 +22,6 @@ class OrderItemObserver
 
         // $this->decrementMaterials($product, $quantityOrdered);
         updateOrderTotals($orderItem->order_id);
-        event(new OrderEvents($order));
     }
 
     /**
@@ -31,7 +30,6 @@ class OrderItemObserver
     public function updated(OrderItem $orderItem): void
     {
         $order = Order::find($orderItem->order_id);
-        event(new OrderEvents($order));
         // updateOrderTotals($orderItem->order_id);
     }
 

@@ -16,7 +16,6 @@ class PaymentObserver
         // Decrement materialas for each product
         DecrementMaterials::dispatch($order);
 
-        event(new OrderEvents($order));
 
         // Another way to decrement materials if the first one is not working
 

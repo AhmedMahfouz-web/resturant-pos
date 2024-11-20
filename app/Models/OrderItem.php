@@ -14,7 +14,10 @@ class OrderItem extends Model
         'product_id',
         'quantity',
         'price',
-        'discount',
+        'discount_value', // Calculated discount value
+        'discount_type', // {percentage, cash, saved}
+        'discount_id', // Discount id form Discount model
+        'discount', // Discount value per one
         'sub_total',
         'total_amount',
         'tax',
@@ -30,5 +33,10 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function discountSaved()
+    {
+        return $this->hasOne(Discount::class);
     }
 }
