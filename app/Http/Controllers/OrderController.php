@@ -254,8 +254,8 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order split successfully',
-            'original_order' => $originalOrder->load('orderItem.product'),
-            'new_order' => $newOrder->load('orderItem.product'),
+            'original_order' => $originalOrder->load('orderItems.product'),
+            'new_order' => $newOrder->load('orderItems.product'),
         ], 200);
     }
 
