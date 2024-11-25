@@ -250,12 +250,12 @@ class OrderController extends Controller
 
         $originalOrder->orderItems()->where('quantity', 0)->delete();
 
-        updateOrderTotals($originalOrder->id);
+        $originalOrder = updateOrderTotals($originalOrder->id);
 
         return response()->json([
             'message' => 'Order split successfully',
-            'original_order' => $originalOrder,
-            'new_order' => $newOrder,
+            'original_order' => $originalOrder->load('orderItem.product'),
+            'new_order' => $newOrder->load('orderItem.product'),
         ], 200);
     }
 
