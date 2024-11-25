@@ -101,6 +101,7 @@ if (!function_exists('calculate_tax_and_service')) {
                 'discount_type' => $discount_type,
                 'discount' => $discount,
             ]);
+            return $order;
         } catch (\Exception $e) {
             error_log("Error updating order totals for order ID: " . $orderId . " - " . $e->getMessage());
         }
