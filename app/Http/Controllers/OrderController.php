@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Shift;
 use App\Models\Table;
+use App\Services\OrderService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -67,22 +68,16 @@ class OrderController extends Controller
     }
 
     // Create a new order
-    public function createOrder(Request $request)
+    public function createOrder(Request $request, OrderService $orderService)
     {
         $validated = $request->validate([
             'table_id' => 'exists:tables,id',
-            'items' => 'required|array', // Array of items
+            'items' => 'required|array',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         $newOrderId = $this->generate_new_order_id();
-
-        $totalAmount = 0;
-        $totalTax = 0;
-        $totalService = 0;
-        $totalDiscount = 0;
-        $grandTotal = 0;
 
         $orderData = [
             'user_id' => auth()->user()->id,
@@ -91,86 +86,26 @@ class OrderController extends Controller
             'type' => $request->type,
             'shift_id' => $request->shift_id,
             'status' => 'live',
-            'tax' => $totalTax,
-            'discount' => $totalDiscount,
-            'service' => $totalService,
-            'sub_total' => $totalAmount,
-            'total_amount' => $grandTotal,
+            'tax' => 0,
+            'discount' => 0,
+            'service' => 0,
+            'sub_total' => 0,
+            'total_amount' => 0,
         ];
 
         if (!empty($request->table_id)) {
             $orderData['table_id'] = $request->table_id;
         }
 
-        $order = Order::create($orderData);
-
-        // Collect order items data for batch insertion
-        $orderItemsData = [];
-
-        foreach ($validated['items'] as $item) {
+        $items = array_map(function ($item) {
             $product = Product::find($item['product_id']);
-
-            // Prepare order item data including the product for calculations
-            $orderItemData = [
-                'order_id' => $order->id,
+            return [
                 'product' => $product,
-                'product_id' => $product->id,
-                'price' => $product->price,
-                'discount_type' => null,
-                'discount' => null,
                 'quantity' => $item['quantity'],
-                'sub_total' => $product->price * $item['quantity'],
             ];
+        }, $validated['items']);
 
-            $calculated = calculate_total_amount_for_order_item($request->type, (object)$orderItemData);
-
-            // Add calculated values to the order item data
-            $orderItemData['tax'] = $calculated['tax'];
-            $orderItemData['service'] = $calculated['service'];
-            $orderItemData['discount'] = $calculated['discount'];
-            $orderItemData['discount_value'] = $calculated['discount_value'];
-            $orderItemData['discount_type'] = $calculated['discount_type'];
-            $orderItemData['total_amount'] = $calculated['total_amount'];
-
-            // Create a new array for insertion excluding the 'product' key
-            $orderItemForInsert = [
-                'order_id' => $orderItemData['order_id'],
-                'product_id' => $orderItemData['product_id'],
-                'price' => $orderItemData['price'],
-                'quantity' => $orderItemData['quantity'],
-                'sub_total' => $orderItemData['sub_total'],
-                'total_amount' => $orderItemData['total_amount'],
-                'tax' => $orderItemData['tax'],
-                'service' => $orderItemData['service'],
-                'discount' => $orderItemData['discount'],
-                'discount_value' => $orderItemData['discount_value'],
-                'discount_type' => $orderItemData['discount_type'],
-            ];
-
-            // Add to the array for batch insertion
-            $orderItemsData[] = $orderItemForInsert;
-
-            // Update totals
-            $totalAmount += $calculated['base_amount'];
-            $totalTax += $calculated['tax'];
-            $totalService += $calculated['service'];
-            $totalDiscount += $calculated['discount'];
-            $grandTotal += $calculated['total_amount'];
-        }
-
-        // Perform batch insert
-        OrderItem::insert($orderItemsData);
-
-        // Update the order with the calculated totals
-        $order->update([
-            'tax' => $totalTax,
-            'discount' => 0,
-            'service' => $totalService,
-            'sub_total' => $totalAmount,
-            'total_amount' => $grandTotal,
-            'discount_value' => $totalDiscount,
-            'discount_type' => null,
-        ]);
+        $order = $orderService->createOrder($orderData, $items);
 
         return response()->json([
             'success' => 'true',
@@ -178,6 +113,7 @@ class OrderController extends Controller
             'order' => $order->load('orderItems.product'),
         ], 201);
     }
+
 
 
     // Update an order (e.g., add or remove items)
@@ -268,9 +204,8 @@ class OrderController extends Controller
         ]);
     }
 
-    public function splitOrder($id, Request $request)
+    public function splitOrder($id, Request $request, OrderService $orderService)
     {
-        // Retrieve the original order and validate its existence
         $originalOrder = Order::with('orderItems')->find($id);
         if (!$originalOrder) {
             return response()->json(['message' => 'Order not found'], 404);
@@ -282,8 +217,7 @@ class OrderController extends Controller
 
         $newOrderId = $this->generate_new_order_id();
 
-        // Create a new order with the same metadata as the original
-        $newOrder = Order::create([
+        $orderData = [
             'user_id' => $originalOrder->user_id,
             'table_id' => null,
             'guest' => null,
@@ -292,63 +226,31 @@ class OrderController extends Controller
             'shift_id' => $originalOrder->shift_id,
             'status' => 'live',
             'tax' => 0,
-            'sub_total' => 0,
-            'service' => 0,
             'discount' => 0,
+            'service' => 0,
+            'sub_total' => 0,
             'total_amount' => 0,
-        ]);
+        ];
 
-        // Collect order items data for batch insertion
-        $orderItemsData = [];
-        $totalAmount = 0;
-        $totalTax = 0;
-        $totalService = 0;
-        $totalDiscount = 0;
-
-        // Loop through each item to move and split the quantities
+        $items = [];
         foreach ($request->items as $itemToMove) {
             $orderItem = $originalOrder->orderItems()->find($itemToMove['id']);
             if ($orderItem && $orderItem->quantity >= $itemToMove['quantity']) {
-                // Update the original order item quantity
-                $orderItem->quantity -= $itemToMove['quantity'];
-                $orderItem->save();
+                $orderItem->decrement('quantity', $itemToMove['quantity']);
+                $product = Product::find($orderItem->product_id);
 
-                // Prepare new order item data for the new order
-                $orderItemData = [
-                    'order_id' => $newOrder->id,
-                    'product_id' => $orderItem->product_id,
-                    'price' => $orderItem->price,
+                $items[] = [
+                    'product' => $product,
                     'quantity' => $itemToMove['quantity'],
                 ];
-
-                // Calculate totals for the new order item
-                $calculated = calculate_total_amount_for_order_item($newOrder->type, (object)$orderItemData);
-                $orderItemData['tax'] = $calculated['tax'];
-                $orderItemData['service'] = $calculated['service'];
-                $orderItemData['discount'] = $calculated['discount'];
-                $orderItemData['sub_total'] = $calculated['base_total'];
-                $orderItemData['total_amount'] = $calculated['total_amount'];
-
-                // Add to the array for batch insertion
-                $orderItemsData[] = $orderItemData;
-
-                // Update totals
-                $totalAmount += $calculated['base_amount'];
-                $totalTax += $calculated['tax'];
-                $totalService += $calculated['service'];
-                $totalDiscount += $calculated['discount'];
             }
         }
 
-        // Perform batch insert for new order items
-        OrderItem::insert($orderItemsData);
+        $newOrder = $orderService->createOrder($orderData, $items);
 
-        // Remove any order items that now have a zero quantity
         $originalOrder->orderItems()->where('quantity', 0)->delete();
 
-        // Update the totals for both orders
         updateOrderTotals($originalOrder->id);
-        updateOrderTotals($newOrder->id);
 
         return response()->json([
             'message' => 'Order split successfully',
@@ -356,6 +258,7 @@ class OrderController extends Controller
             'new_order' => $newOrder,
         ], 200);
     }
+
 
 
     // Generate ids for orders
