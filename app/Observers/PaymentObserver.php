@@ -3,18 +3,21 @@
 namespace App\Observers;
 
 use App\Events\OrderEvents;
+use App\Events\ShiftEvent;
 use App\Jobs\DecrementMaterials;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Shift;
 
 class PaymentObserver
 {
     public function created(Payment $payment): void
     {
         $order = Order::where('id', $payment->order_id)->first();
-
+        $shift = Shift::find($payment->shift_id);
         // Decrement materialas for each product
         DecrementMaterials::dispatch($order);
+        event(new ShiftEvent($shift));
 
 
         // Another way to decrement materials if the first one is not working

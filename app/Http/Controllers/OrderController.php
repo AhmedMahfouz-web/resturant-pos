@@ -257,7 +257,8 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order->update(['discount' => 0]);
+        $currentItemDiscounts = $order->orderItems->sum('discount_value');
+        $order->update(['discount' => 0, 'discount_type' => null, 'discount_value' => $currentItemDiscounts]);
         updateOrderTotals($id);
 
         return response()->json([
