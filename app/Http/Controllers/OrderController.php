@@ -217,25 +217,24 @@ class OrderController extends Controller
         }
 
         // Calculate current total item-level discounts
-        $currentItemDiscounts = $order->orderItems->sum('discount');
+        $currentItemDiscounts = $order->orderItems->sum('discount_value');
 
-        // Apply whole-order discount based on type
-        if ($validated['type'] == 'cash') {
-            $orderDiscountValue = $validated['amount'];
-        } else {
-            $orderDiscountValue = ($order->sub_total * $validated['amount']) / 100;
-        }
+        $calculated = calculate_discount($validated['type'], $validated['amount'], $order->sub_total);
+        $total_discount = $calculated['discount_value'] + $currentItemDiscounts;
 
         // Ensure whole-order discount + item-level discounts do not exceed sub-total
-        if ($orderDiscountValue + $currentItemDiscounts > $order->sub_total) {
+        if ($total_discount > $order->sub_total) {
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 
-        $service_tax = calculate_tax_service($order->sub_total - $orderDiscountValue, $order->type);
+        $service_tax = calculate_tax_service($order->sub_total - $total_discount, $order->type);
 
         // Update the order with the whole-order discount
-        $order->discount = $orderDiscountValue;
-        $order->total_amount = $order->sub_total + $service_tax['service'] + $service_tax['tax'] - $order->discount;
+        $order->discount = $calculated['discount'];
+        $order->discount_value = $total_discount;
+        $order->discount_type = $calculated['discount_type'];
+        $order->discount_id = $calculated['discount_id'];
+        $order->total_amount = $order->sub_total + $service_tax['service'] + $service_tax['tax'] - $total_discount;
         $order->service = $service_tax['service'];
         $order->tax = $service_tax['tax'];
         $order->save();

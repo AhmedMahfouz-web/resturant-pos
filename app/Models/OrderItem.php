@@ -17,7 +17,7 @@ class OrderItem extends Model
         'discount_value', // Calculated discount value
         'discount_type', // {percentage, cash, saved}
         'discount_id', // Discount id form Discount model
-        'discount', // Discount value per one
+        'discount', // Discount amount
         'sub_total',
         'total_amount',
         'tax',

@@ -106,6 +106,7 @@ if (!function_exists('calculate_tax_and_service')) {
         }
     }
 
+    // Calculate discount for OrderItem that might have discount already for total order calculation
     function calculateDiscount($item)
     {
         $sub_total = $item->price * $item->quantity;
@@ -171,9 +172,10 @@ if (!function_exists('calculate_tax_and_service')) {
         }
     }
 
-    function calculate_discount($type, $amount, $sub_total, $total_amount)
+    // Calculate discuont for orderItem for orderItem calculation
+    function calculate_discount($type, $amount, $sub_total)
     {
-        if (!in_array($type, ['cash', 'percentage'])) {
+        if (!in_array($type, ['cash', 'percentage', 'saved'])) {
             error_log("Invalid discount type: " . $type);
             return 0;
         }
@@ -190,7 +192,13 @@ if (!function_exists('calculate_tax_and_service')) {
             $discount_value = calculatePercentage($sub_total, $amount);
         }
 
-        return min($discount_value, $total_amount);
+        return [
+            'sub_total' => $sub_total,
+            'discount' => $amount,
+            'discount_type' => $type,
+            'discount_value' => $discount_value,
+            'discount_id' => null,
+        ];
     }
 
     function calculate_tax_service($subTotalAfterDiscount, $type)

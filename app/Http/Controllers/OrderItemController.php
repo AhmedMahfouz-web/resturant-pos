@@ -134,23 +134,21 @@ class OrderItemController extends Controller
             return response()->json(['message' => 'Order item not found'], 404);
         }
 
-        $itemTotal = $orderItem->price * $orderItem->quantity;
-        if ($validated['type'] == 'cash') {
-            $orderDiscountValue = $validated['amount'];
-        } else {
-            $orderDiscountValue = ($orderItem->sub_total * $validated['amount']) / 100;
-        }
+        $calculated = calculate_discount($validated['type'], $validated['amount'], $orderItem->sub_total);
 
         // Ensure discount does not exceed the item total
-        if ($orderDiscountValue > $orderItem->sub_total) {
+        if ($calculated['discount_value'] > $orderItem->sub_total) {
             return response()->json(['message' => 'Total discount exceeds the sub-total amount.'], 400);
         }
 
-        $service_tax = calculate_tax_service($orderItem->sub_total - $orderDiscountValue, Order::select('type')->where('id', $orderItem->id)->first());
+        $service_tax = calculate_tax_service($orderItem->sub_total - $calculated['discount_value'], Order::select('type')->where('id', $orderItem->id)->first());
 
         // Apply the discount and update the order item
-        $orderItem->discount = $validated['discount'];
-        $orderItem->total_amount = $orderItem->sub_total + $service_tax['service'] + $service_tax['tax'] - $orderItem->discount;
+        $orderItem->discount = $calculated['discount'];
+        $orderItem->discount_value = $calculated['discount_value'];
+        $orderItem->discount_type = $calculated['discount_type'];
+        $orderItem->discount_id = $calculated['discount_id'];
+        $orderItem->total_amount = $orderItem->sub_total + $service_tax['service'] + $service_tax['tax'] - $calculated['discount_value'];
         $orderItem->service = $service_tax['service'];
         $orderItem->tax = $service_tax['tax'];
         $orderItem->save();
