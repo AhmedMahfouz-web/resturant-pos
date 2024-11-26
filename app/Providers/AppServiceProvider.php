@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Table;
 use App\Observers\OrderItemObserver;
 use App\Observers\OrderObserver;
 use App\Observers\PaymentObserver;
+use App\Observers\TableObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
         OrderItem::observe(OrderItemObserver::class);
         Order::observe(OrderObserver::class);
         Payment::observe(PaymentObserver::class);
+        Table::observe(TableObserver::class);
     }
 }
