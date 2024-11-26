@@ -128,7 +128,7 @@ class OrderController extends Controller
 
         $order->update([
             'type' => $request->type,
-            'table' => $request->table_id
+            'table_id' => $request->table_id
         ]);
 
         $order = updateOrderTotals($id);
