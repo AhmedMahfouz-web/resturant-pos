@@ -46,6 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'old reciept',
             'reprint reciept',
             'shift details',
+            'order item discount',
         ];
 
         // Create each permission from the array

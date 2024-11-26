@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserLoggedOutEvent;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Shift;
@@ -48,6 +49,7 @@ class ShiftController extends Controller
         ]);
 
         User::logoutAllUsers();
+        event(new UserLoggedOutEvent());
 
         return response()->json(['message' => 'Shift closed successfully and users logged out'], 200);
     }
