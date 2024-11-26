@@ -120,8 +120,18 @@ class OrderController extends Controller
     public function updateOrder(Request $request, $id)
     {
         $order = Order::findOrFail($id);
-        $order->update($request->all());
-        updateOrderTotals($id);
+
+        if (!empty($order->table_id)) {
+            $table = Table::find($order->table_id);
+            $table->update(['is_free' => 1]);
+        }
+
+        $order->update([
+            'type' => $request->type,
+            'table' => $request->table_id
+        ]);
+
+        $order = updateOrderTotals($id);
 
         return response()->json(['message' => 'Order updated successfully', 'order' => Order::find($id)]);
     }

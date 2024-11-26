@@ -29,6 +29,11 @@ class OrderObserver
                 $table = Table::find($order->table_id);
                 $table->update(['is_free' => 1]);
             }
+        } else {
+            if ($order->type == 'dine-in' && !empty($order->table_id)) {
+                $table = Table::find($order->table_id);
+                $table->update(['is_free' => 0]);
+            }
         }
 
         event(new OrderEvents($order));
