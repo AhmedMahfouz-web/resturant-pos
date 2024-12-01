@@ -125,7 +125,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('create', [RecipeController::class, 'create']);
         Route::post('', [RecipeController::class, 'store']);
         Route::get('/{id}', [RecipeController::class, 'edit']);
-        Route::put('/{id}', [RecipeController::class, 'update']);
+        Route::post('/{id}', [RecipeController::class, 'update']);
         Route::delete('/{id}', [RecipeController::class, 'destroy']);
     });
 
