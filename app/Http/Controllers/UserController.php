@@ -57,9 +57,9 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         if ($request->has('password')) {
             $request->validate(['password' => 'string|min:6']);
-            $user->update($request->only(['name', 'email', 'login_code', 'password']));
+            $user->update($request->only(['first_name', 'last_name', 'username', 'email', 'login_code', 'password']));
         } else {
-            $user->update($request->only(['name', 'email', 'login_code']));
+            $user->update($request->only(['first_name', 'last_name', 'username', 'email', 'login_code']));
         }
         return response()->json(['message' => 'User updated successfully', 'user' => $user]);
     }
