@@ -43,7 +43,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/create', [UserController::class, 'createUser']);   // Create a new user
         Route::post('/', [UserController::class, 'storeUser']);         // Create a new user
         Route::get('/{id}', [UserController::class, 'editUser']);       // Edit a user
-        Route::put('/{id}', [UserController::class, 'updateUser']);     // Update user details
+        Route::post('/{id}', [UserController::class, 'updateUser']);     // Update user details
         Route::delete('/{id}', [UserController::class, 'deleteUser']);  // Delete a user
     });
 
@@ -52,7 +52,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/create', [RoleController::class, 'createRole']);     // Create a new role
         Route::post('/', [RoleController::class, 'storeRole']);           // Create a new role
         Route::get('/{id}', [RoleController::class, 'editRole']);         // Update role details
-        Route::put('/{id}', [RoleController::class, 'updateRole']);       // Update role details
+        Route::post('/{id}', [RoleController::class, 'updateRole']);       // Update role details
         Route::delete('/{id}', [RoleController::class, 'deleteRole']);    // Delete a role
     });
 
@@ -62,7 +62,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/create', [ProductController::class, 'createProduct']);   // Create a new product
         Route::post('/', [ProductController::class, 'storeProduct']);         // Create a new product
         Route::get('/{id}', [ProductController::class, 'editProduct']);       // Update a product
-        Route::put('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
+        Route::post('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
         Route::delete('/{id}', [ProductController::class, 'deleteProduct']);  // Delete a product
     });
 
@@ -70,7 +70,7 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::get('/', [CategoryController::class, 'index']);                      // Get all categories
         Route::post('/', [CategoryController::class, 'storeCategory']);             // Create a new category
         Route::post('/create', [CategoryController::class, 'createCategory']);      // Create a new category
-        Route::put('/{id}', [CategoryController::class, 'updateCategory']);         // Update a category
+        Route::post('/{id}', [CategoryController::class, 'updateCategory']);         // Update a category
         Route::delete('/{id}', [CategoryController::class, 'deleteCategory']);      // Delete a category
     });
 
@@ -122,6 +122,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::prefix('recipes')->group(function () {
         Route::get('', [RecipeController::class, 'index']);
         Route::get('/show/{id}', [RecipeController::class, 'show']);
+        Route::get('create', [RecipeController::class, 'create']);
         Route::post('', [RecipeController::class, 'store']);
         Route::get('/{id}', [RecipeController::class, 'edit']);
         Route::put('/{id}', [RecipeController::class, 'update']);

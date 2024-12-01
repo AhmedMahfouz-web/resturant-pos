@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -55,13 +56,40 @@ class UserController extends Controller
     public function updateUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        if ($request->has('password')) {
-            $request->validate(['password' => 'string|min:6']);
-            $user->update($request->only(['first_name', 'last_name', 'username', 'email', 'login_code', 'password']));
+
+        // Validate the request data
+        $validatedData = $request->validate([
+            'first_name' => 'string|max:255',
+            'last_name' => 'string|max:255',
+            'username' => 'string|max:255|unique:users,username,' . $id,
+            'email' => 'string|email|max:255|unique:users,email,' . $id,
+            'login_code' => 'string|nullable',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        // Check if password is present and hash it
+        if ($request->filled('password')) {
+            $validatedData['password'] = bcrypt($request->password);
         } else {
-            $user->update($request->only(['first_name', 'last_name', 'username', 'email', 'login_code']));
+            unset($validatedData['password']);
         }
-        return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+
+        // Debugging: Log the validated data
+        Log::info('Updating user with data: ', $validatedData);
+
+        try {
+            // Update the user with validated data
+            $user->syncRoles([$request->role]);
+            $user->update($validatedData);
+
+            // Debugging: Check if the user was updated
+            Log::info('User updated: ', $user->toArray());
+
+            return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+        } catch (\Exception $e) {
+            Log::error('Error updating user: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to update user'], 500);
+        }
     }
 
     // Admin deletes a user
