@@ -90,7 +90,7 @@ class RecipeController extends Controller
         ]);
 
         $recipe = Recipe::findOrFail($id);
-
+        $recipe->update([$request->name, $request->instructions]);
         // Update the materials attached to the recipe
         $recipe->materials()->sync([]);
         foreach ($validated['materials'] as $material) {

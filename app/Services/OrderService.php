@@ -23,18 +23,18 @@ class OrderService
                 $product = $item['product'];
                 $orderItemData = [
                     'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'product' => $product,
-                    'price' => $product->price,
+                    'product_id' => $item['product']->id,
+                    'price' => $item['product']['price'],
                     'quantity' => $item['quantity'],
                     'discount' => 0,
                     'discount_type' => null,
                     'discount_id' => null,
                     'discount_value' => 0,
-                    'sub_total' => $product->price * $item['quantity'],
+                    'product' => $product,
+                    'sub_total' => $item['product']['price'] * $item['quantity'],
                 ];
 
-                $calculated = calculate_total_amount_for_order_item($orderData['type'], (object)$orderItemData);
+                $calculated = calculate_total_amount_for_order_item($orderData['type'], $orderItemData);
                 $orderItemData['tax'] = $calculated['tax'];
                 $orderItemData['service'] = $calculated['service'];
                 $orderItemData['discount'] = $calculated['discount'];
@@ -47,13 +47,12 @@ class OrderService
                 $totalService += $calculated['service'];
                 $totalDiscount += $calculated['discount'];
             }
-
-            $orderItemsData = array_map(function ($item) {
-                unset($item['product']); // Exclude the 'product' field
-                return $item;
+            $orderItemsToInsert = array_map(function ($item) {
+                unset($item['product']); // Remove the 'product' key if it exists
+                return $item; // Return the modified item
             }, $orderItemsData);
 
-            OrderItem::insert($orderItemsData);
+            OrderItem::insert($orderItemsToInsert);
 
             $order->update([
                 'tax' => $totalTax,

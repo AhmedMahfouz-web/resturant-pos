@@ -12,6 +12,7 @@ use App\Models\Table;
 use App\Services\OrderService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -30,14 +31,14 @@ class OrderController extends Controller
             return response()->json(Order::with('orderItems.product')->latest()->get());
         } else {
             $shift_id = Shift::select('id')->first();
-            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest()->get());
+            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest()->take(100)->get());
         }
     }
 
     // Get live orders
     public function liveOrders()
     {
-        $orders = Order::where('status', 'live')->with('orderItems.product')->latest()->get();
+        $orders = Order::where('status', 'live')->with('orderItems.product')->latest()->take(100)->get();
         return response()->json($orders);
     }
 
@@ -49,7 +50,7 @@ class OrderController extends Controller
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->get();
+            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->take(100)->get();
             return response()->json($orders);
         }
     }
@@ -62,7 +63,7 @@ class OrderController extends Controller
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->get();
+            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->take(100)->get();
             return response()->json($orders);
         }
     }
@@ -97,14 +98,17 @@ class OrderController extends Controller
             $orderData['table_id'] = $request->table_id;
         }
 
-        $items = array_map(function ($item) {
-            $product = Product::find($item['product_id']);
+        // Fetch all products in a single query
+        $productIds = array_column($validated['items'], 'product_id');
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+        $items = array_map(function ($item) use ($products) {
+            $product = $products->get($item['product_id']);
             return [
                 'product' => $product,
                 'quantity' => $item['quantity'],
             ];
         }, $validated['items']);
-
+        // Use a transaction to ensure data integrity
         $order = $orderService->createOrder($orderData, $items);
 
         return response()->json([

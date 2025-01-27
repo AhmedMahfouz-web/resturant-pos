@@ -9,12 +9,12 @@ if (!function_exists('calculate_tax_and_service')) {
         $serviceAmount = 0;
         $calculated_discount = calculateDiscount($item);
 
-        if ($order_type == 'dine-in' && $item->product->service === 'true') {
+        if ($order_type === 'dine-in' && $item['product']->service === 'true') {
             $serviceAmount = calculatePercentage($calculated_discount['sub_total'] - $calculated_discount['discount_value'], $servicePercentage);
         }
 
         $taxAmount = 0;
-        if ($item->product->tax === 'true') {
+        if ($item['product']->tax === 'true') {
             $taxAmount = calculatePercentage(($calculated_discount['sub_total'] - $calculated_discount['discount_value']) + $serviceAmount, $taxPercentage);
         }
 
@@ -107,12 +107,14 @@ if (!function_exists('calculate_tax_and_service')) {
         }
     }
 
-    // Calculate discount for OrderItem that might have discount already for total order calculation
+    // Calculate discount for an order item
     function calculateDiscount($item)
     {
-        $sub_total = $item->price * $item->quantity;
+        $sub_total = $item['price'] * $item['quantity'];
         $discountValue = 0;
-        if ($item->product->discount_type !== null) {
+
+        // Calculate product discount
+        if ($item['discount_type'] !== null) {
             if ($item->product->discount_type === 'percentage') {
                 $discountValue += $sub_total * $item->product->discount / 100;
             } else {
@@ -120,33 +122,29 @@ if (!function_exists('calculate_tax_and_service')) {
             }
         }
 
-        $oldTotalDiscount = $discountValue;     // Save product's discount value
-        if ($item->discount_type == "cash") {
+        // Calculate item discount
+        if ($item['discount_type'] == "cash") {
             $discountValue += $item->discount;
-        } elseif ($item->discount_type == "percentage") {
+        } elseif ($item['discount_type'] == "percentage") {
             $discountValue += $sub_total * $item->discount / 100;
-        } elseif ($item->discount_type == "saved") {
+        } elseif ($item['discount_type'] == "saved") {
             $discountValue += $sub_total * $item->discountSaved->amount / 100;
         }
 
-        $discount = $item->discount;
-        $discount_type = $item->discount_type;
-
-        // Check if total discount is bigger than sub total or not
+        // Ensure total discount does not exceed sub total
         if ($sub_total < $discountValue) {
-            $discountValue = $oldTotalDiscount;
-            $discount = 0;
-            $discount_type = null;
+            $discountValue = 0; // Reset discount if it exceeds sub total
         }
 
         return [
             'sub_total' => $sub_total,
-            'discount' => $discount,
-            'discount_type' => $discount_type,
+            'discount' => $item['discount'],
+            'discount_type' => $item['discount_type'],
             'discount_value' => $discountValue
         ];
     }
 
+    // Calculate percentage of a given amount
     function calculatePercentage($amount, $percentage)
     {
         return ($percentage / 100) * $amount;
