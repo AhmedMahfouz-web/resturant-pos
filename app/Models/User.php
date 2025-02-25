@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Token;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -81,6 +82,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Shift::class);
     }
 
+    public function tokens()
+    {
+        return $this->hasMany(Token::class); // Ensure this points to the correct Token model
+    }
+
     // public function getPermissionAttribute()
     // {
     //     return $this->getPermissionsViaRoles();
@@ -92,7 +98,7 @@ class User extends Authenticatable implements JWTSubject
         $users = User::all();
 
         foreach ($users as $user) {
-            // Blacklist each user’s current token
+            // Blacklist each user's current token
             JWTAuth::invalidate(JWTAuth::fromUser($user));
         }
     }

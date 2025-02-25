@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Token;
+use App\Models\TokenBlacklist;
 
 class AuthController extends Controller
 {
@@ -30,11 +33,17 @@ class AuthController extends Controller
 
             // Generate token for the user
             $token = auth()->login($user);
+
+            // Store the token in the database
+            Token::create([
+                'user_id' => $user->id,
+                'token' => $token
+            ]);
+
             $shift = app(ShiftController::class);
             $shift = $shift->startShift($user);
 
             $user->shift = $shift;
-
 
             if ($shift) {
                 return $this->respondWithToken($token, $shift, $user);
@@ -50,6 +59,12 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Store the token in the database
+        Token::create([
+            'user_id' => auth()->user()->id,
+            'token' => $token
+        ]);
+
         return $this->respondWithToken($token, null, auth()->user());
     }
 
@@ -61,14 +76,16 @@ class AuthController extends Controller
     }
 
     // Log the user out (Invalidate the token)
-    public function logout()
+    public function logout(Request $request)
     {
-        // if (auth()->user()->can('end shift')) {
-        //     $shift = app(ShiftController::class);
-        //     $shift->endShift();
-        // }
+        $token = $request->bearerToken();
 
-        auth()->logout();
+        // Add token to blacklist
+        TokenBlacklist::create(['token' => $token]);
+
+        // Remove the token from the database
+        Token::where('token', $token)->delete();
+
         return response()->json(['message' => 'Successfully logged out']);
     }
 

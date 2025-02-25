@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use App\Http\Middleware\CheckTokenBlacklist;
 
 class Kernel extends HttpKernel
 {
@@ -65,5 +66,10 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'jwt' => \App\Http\Middleware\JWT::class,
+    ];
+
+    protected $routeMiddleware = [
+        // ...
+        'check.token.blacklist' => CheckTokenBlacklist::class,
     ];
 }

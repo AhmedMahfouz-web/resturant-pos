@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
 
-Route::group(['middleware' => 'jwt'], function () {
+Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
 
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
@@ -143,7 +143,18 @@ Route::group(['middleware' => 'jwt'], function () {
         Route::post('{shiftId}/close', [ShiftController::class, 'closeShift']);
     });
 
-    Route::get('/reports/sales', [ReportController::class, 'salesReport']);
-    Route::get('/reports/inventory', [ReportController::class, 'inventoryReport']);
-    Route::get('/reports/user-activity', [ReportController::class, 'userActivityReport']);
+    Route::prefix('reports')->group(function () {
+        Route::get('/sales', [ReportController::class, 'salesReport']);
+        Route::get('/inventory', [ReportController::class, 'inventoryReport']);
+        Route::get('/user-activity', [ReportController::class, 'userActivityReport']);
+        Route::get('/monthly', [ReportController::class, 'monthlyReport']);
+        Route::get('/top-selling-products', [ReportController::class, 'topSellingProducts']);
+        Route::get('/customer-purchase-history', [ReportController::class, 'customerPurchaseHistory']);
+        Route::get('/sales-by-category', [ReportController::class, 'salesByCategory']);
+        Route::get('/refunds-and-returns', [ReportController::class, 'refundsAndReturns']);
+        Route::get('/monthly-sales-growth', [ReportController::class, 'monthlySalesGrowth']);
+        Route::get('/user-engagement', [ReportController::class, 'userEngagement']);
+        Route::get('/inventory-turnover', [ReportController::class, 'inventoryTurnover']);
+        Route::get('/payment-method-performance', [ReportController::class, 'paymentMethodPerformance']);
+    });
 });
