@@ -138,10 +138,10 @@ class ReportController extends Controller
                 return $order->created_at->isSameDay($currentDate);
             });
 
-            $totalSubTotal = $dailyOrders->sum('total_amount');
+            $totalSubTotal = $dailyOrders->sum('sub_total');
             $totalServices = $dailyOrders->sum('service');
             $totalTax = $dailyOrders->sum('tax');
-            $totalRevenue = $totalSubTotal + $totalServices + $totalTax;
+            $totalRevenue = $dailyOrders->sum('total_amount');;
 
             $paymentBreakdown = Payment::select('payment_method_id', DB::raw('SUM(amount) as total_amount'))
                 ->whereIn('order_id', $dailyOrders->pluck('id'))
