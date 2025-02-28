@@ -154,7 +154,6 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/payment-method-breakdown', [ReportController::class, 'paymentMethodBreakdown']);
         Route::get('/inventory-levels', [ReportController::class, 'inventoryLevels']);
         Route::get('/user-engagement', [ReportController::class, 'userEngagementMetrics']);
-        Route::get('/shifts', [ReportController::class, 'getShifts']);
     });
 
     Route::prefix('reports')->group(function () {

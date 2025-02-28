@@ -19,7 +19,7 @@ class OrderController extends Controller
     //Get specific order
     public function show($id)
     {
-        $order = Order::with('orderItems.product')->find($id);
+        $order = Order::with(['orderItems.product', 'user'])->find($id);
 
         return response()->json($order);
     }
@@ -28,17 +28,17 @@ class OrderController extends Controller
     public function index()
     {
         if (auth()->user()->can('old reciept')) {
-            return response()->json(Order::with('orderItems.product')->latest()->get());
+            return response()->json(Order::with(['orderItems.product', 'user'])->latest()->get());
         } else {
             $shift_id = Shift::select('id')->first();
-            return response()->json(Order::where('shift_id', $shift_id)->with('orderItems.product')->latest()->take(100)->get());
+            return response()->json(Order::where('shift_id', $shift_id)->with(['orderItems.product', 'user'])->latest()->take(100)->get());
         }
     }
 
     // Get live orders
     public function liveOrders()
     {
-        $orders = Order::where('status', 'live')->with('orderItems.product')->latest()->take(100)->get();
+        $orders = Order::where('status', 'live')->with(['orderItems.product', 'user'])->latest()->take(100)->get();
         return response()->json($orders);
     }
 
@@ -46,11 +46,11 @@ class OrderController extends Controller
     public function canceledOrders()
     {
         if (auth()->user()->can('old reciept')) {
-            $orders = Order::where('status', 'canceled')->with('orderItems.product')->latest()->get();
+            $orders = Order::where('status', 'canceled')->with(['orderItems.product', 'user'])->latest()->get();
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->take(100)->get();
+            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
             return response()->json($orders);
         }
     }
@@ -59,11 +59,11 @@ class OrderController extends Controller
     public function completedOrders()
     {
         if (auth()->user()->can('old reciept')) {
-            $orders = Order::where('status', 'completed')->with('orderItems.product')->latest()->get();
+            $orders = Order::where('status', 'completed')->with(['orderItems.product', 'user'])->latest()->get();
             return response()->json($orders);
         } else {
             $shift_id = Shift::select('id')->first();
-            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with('orderItems.product')->latest()->take(100)->get();
+            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
             return response()->json($orders);
         }
     }
@@ -114,16 +114,14 @@ class OrderController extends Controller
         return response()->json([
             'success' => 'true',
             'message' => 'Order created successfully',
-            'order' => $order->load('orderItems.product'),
+            'order' => $order->load(['orderItems.product', 'user']),
         ], 201);
     }
-
-
 
     // Update an order (e.g., add or remove items)
     public function updateOrder(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with(['orderItems.product', 'user'])->findOrFail($id);
 
         if (!empty($order->table_id)) {
             $table = Table::find($order->table_id);
@@ -137,14 +135,27 @@ class OrderController extends Controller
 
         $order = updateOrderTotals($id);
 
-        return response()->json(['message' => 'Order updated successfully', 'order' => Order::find($id)]);
+        return response()->json(['message' => 'Order updated successfully', 'order' => $order->load(['orderItems.product', 'user'])]);
     }
 
     // Delete an order
     public function cancelOrder($id, Request $request)
     {
         $order = Order::findOrFail($id);
-        $order->update(['status' => 'canceled']);
+
+        // Validate the request for reasons
+        $request->validate([
+            'reason' => 'nullable|string|max:255',
+            'manual_reason' => 'nullable|string|max:255',
+        ]);
+
+        // Update the order with cancellation details
+        $order->update([
+            'status' => 'canceled',
+            'reason' => $request->reason,
+            'manual_reason' => $request->manual_reason,
+        ]);
+
         if (!empty($request->waste)) {
             DecrementMaterials::dispatch($order);
         }
@@ -191,10 +202,9 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Whole-order discount applied successfully',
-            'order' => $order,
+            'order' => $order->load(['orderItems.product', 'user']),
         ]);
     }
-
 
     // Delete discount to order
     public function cancelDiscount($id)
@@ -214,13 +224,13 @@ class OrderController extends Controller
         return response()->json([
             'success' => 'true',
             'message' => 'Discount deleted successfully',
-            'order' => $order,
+            'order' => $order->load(['orderItems.product', 'user']),
         ]);
     }
 
     public function splitOrder($id, Request $request, OrderService $orderService)
     {
-        $originalOrder = Order::with('orderItems')->find($id);
+        $originalOrder = Order::with(['orderItems.product', 'user'])->find($id);
         if (!$originalOrder) {
             return response()->json(['message' => 'Order not found'], 404);
         }
@@ -268,12 +278,10 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Order split successfully',
-            'original_order' => $originalOrder->load('orderItems.product'),
-            'new_order' => $newOrder->load('orderItems.product'),
+            'original_order' => $originalOrder->load(['orderItems.product', 'user']),
+            'new_order' => $newOrder->load(['orderItems.product', 'user']),
         ], 200);
     }
-
-
 
     // Generate ids for orders
     private function generate_new_order_id()
