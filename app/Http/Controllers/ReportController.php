@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Material;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Shift;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +27,11 @@ class ReportController extends Controller
     public function salesReport(Request $request)
     {
         $startDate = Carbon::parse($request->get('start_date'));
-        $endDate = Carbon::parse($request->get('end_date', Carbon::now()));
+
+        // Set end date to the last minute of the provided end_date or current day
+        $endDate = $request->has('end_date')
+            ? Carbon::parse($request->get('end_date'))->endOfDay()
+            : Carbon::now()->endOfDay();
 
         $orders = Order::whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed')
@@ -113,16 +119,12 @@ class ReportController extends Controller
      */
     public function monthlyReport(Request $request)
     {
-        if (!$request->has('month')) {
-            $month = Carbon::now()->month;
-            $year = Carbon::now()->year;
-        } else {
-            $month = $request->get('month', now()->format('m'));
-            $year = $request->get('year', now()->format('Y'));
-        }
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
 
         $startDate = Carbon::createFromFormat('Y-m-d', "{$year}-{$month}-01");
-        $endDate = $startDate->copy()->endOfMonth();
+        // Set end date to the last minute of the last day of the month
+        $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
         $orders = Order::whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed')
@@ -766,7 +768,7 @@ class ReportController extends Controller
 
         foreach ($shifts as $shift) {
             // Calculate total revenue for the shift
-            $totalRevenue = $shift->orders->sum('total_amount');
+            $totalRevenue = $shift->orders->where('status', 'completed')->sum('total_amount');
 
             // Add the shift data to the response
             $shiftRevenue[] = [

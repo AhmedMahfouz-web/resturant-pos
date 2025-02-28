@@ -298,4 +298,41 @@ class OrderController extends Controller
 
         return $newOrderId;
     }
+
+    public function getOrdersByStatus(Request $request, $status)
+    {
+        // Get the latest shift
+        $latestShift = Shift::latest()->first();
+
+        if (!$latestShift) {
+            return response()->json(['message' => 'No active shifts found'], 404);
+        }
+
+        // Get the month and year from the latest shift's start time
+        $currentMonth = $latestShift->start_time->month;
+        $currentYear = $latestShift->start_time->year;
+
+        // Set end date to the last minute of the provided end_date or current day
+        $endDate = $request->has('end_date')
+            ? Carbon::parse($request->get('end_date'))->endOfDay()
+            : Carbon::now()->endOfDay();
+
+        $query = Order::where('status', $status)
+            ->with([
+                'orderItems' => fn($query) => $query->select('id', 'order_id', 'product_id', 'quantity'),
+                'orderItems.product' => fn($query) => $query->select('id', 'name', 'price')
+            ])
+            ->select('id', 'code', 'status', 'shift_id', 'total_amount', 'created_at')
+            ->whereMonth('created_at', $currentMonth) // Filter by the month of the latest shift
+            ->whereYear('created_at', $currentYear) // Filter by the year of the latest shift
+            ->where('created_at', '<=', $endDate) // Use endDate here
+            ->latest();
+
+        if (!auth()->user()->can('old reciept')) {
+            $shift_id = $latestShift->id; // Use the latest shift ID
+            $query->where('shift_id', $shift_id);
+        }
+
+        return $query->paginate(25);
+    }
 }
