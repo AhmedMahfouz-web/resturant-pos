@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Material;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,6 +92,7 @@ class ReportController extends Controller
         $endDate = Carbon::parse($request->get('end_date', Carbon::now()));
 
         $userSales = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
             ->select('user_id', DB::raw('SUM(total_amount) as total_sales'), DB::raw('COUNT(id) as total_orders'))
             ->groupBy('user_id')
             ->with('user')
@@ -122,7 +124,9 @@ class ReportController extends Controller
         $startDate = Carbon::createFromFormat('Y-m-d', "{$year}-{$month}-01");
         $endDate = $startDate->copy()->endOfMonth();
 
-        $orders = Order::whereBetween('created_at', [$startDate, $endDate])->get();
+        $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->get();
 
         $dailyReport = [];
 
@@ -166,7 +170,7 @@ class ReportController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function topSellingProducts(Request $request)
+    public function sellingProducts(Request $request)
     {
         $startDate = Carbon::parse($request->get('start_date'));
         $endDate = Carbon::parse($request->get('end_date', Carbon::now()));
@@ -571,5 +575,209 @@ class ReportController extends Controller
             'total_amount' => $totalAmount,
             'daily_breakdown' => $dailyBreakdown,
         ]);
+    }
+
+    /**
+     * Get total sales for the current month (completed orders only).
+     */
+    public function totalSalesThisMonth()
+    {
+        $totalSales = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->sum('total_amount');
+
+        return response()->json(['total_sales' => $totalSales]);
+    }
+
+    /**
+     * Get total orders for the current month (completed orders only).
+     */
+    public function totalOrdersThisMonth()
+    {
+        $totalOrders = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->count();
+
+        return response()->json(['total_orders' => $totalOrders]);
+    }
+
+    /**
+     * Get top selling products for the current month (completed orders only).
+     */
+    public function topSellingProducts()
+    {
+        $topProducts = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->with('orderItems.product')
+            ->get()
+            ->flatMap(function ($order) {
+                return $order->orderItems;
+            })
+            ->groupBy('product_id')
+            ->map(function ($group) {
+                return [
+                    'product_id' => $group->first()->product_id,
+                    'product_name' => $group->first()->product->name,
+                    'total_quantity' => $group->sum('quantity'),
+                    'total_revenue' => $group->sum('total_amount'),
+                ];
+            })
+            ->sortByDesc('total_revenue')
+            ->take(10); // Get top 10 products
+
+        return response()->json($topProducts);
+    }
+
+    /**
+     * Get total canceled orders for the current month.
+     */
+    public function totalCanceledOrders()
+    {
+        $totalCanceled = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'canceled') // Only canceled orders
+            ->count();
+
+        return response()->json(['total_canceled_orders' => $totalCanceled]);
+    }
+
+    /**
+     * Get average order value for the current month (completed orders only).
+     */
+    public function averageOrderValue()
+    {
+        $totalSales = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->sum('total_amount');
+
+        $totalOrders = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->count();
+
+        $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
+
+        return response()->json(['average_order_value' => $averageOrderValue]);
+    }
+
+    /**
+     * Get unique customer count for the current month (completed orders only).
+     */
+    public function uniqueCustomerCount()
+    {
+        $uniqueCustomers = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->distinct('user_id') // Assuming user_id is the customer identifier
+            ->count('user_id');
+
+        return response()->json(['unique_customers' => $uniqueCustomers]);
+    }
+
+    /**
+     * Get daily sales trend for the current month (completed orders only).
+     */
+    public function dailySalesTrend()
+    {
+        $dailySales = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_sales')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        return response()->json($dailySales);
+    }
+
+    /**
+     * Get payment method breakdown for the current month (completed orders only).
+     */
+    public function paymentMethodBreakdown()
+    {
+        $paymentBreakdown = Order::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->where('status', 'completed') // Only completed orders
+            ->with('payments') // Assuming you have a payments relationship
+            ->get()
+            ->flatMap(function ($order) {
+                return $order->payments;
+            })
+            ->groupBy('payment_method_id')
+            ->map(function ($group) {
+                return [
+                    'payment_method_id' => $group->first()->payment_method_id,
+                    'total_amount' => $group->sum('amount'),
+                ];
+            });
+
+        return response()->json($paymentBreakdown);
+    }
+
+    /**
+     * Get inventory levels (low stock alerts).
+     */
+    public function inventoryLevels()
+    {
+        // Assuming you have a Product model with a quantity field
+        $lowStockProducts = Product::where('quantity', '<', 10) // Example threshold
+            ->get(['id', 'name', 'quantity']);
+
+        return response()->json($lowStockProducts);
+    }
+
+    /**
+     * Get user engagement metrics for the current month.
+     */
+    public function userEngagementMetrics()
+    {
+        $activeUsers = User::whereHas('orders', function ($query) {
+            $query->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->where('status', 'completed'); // Only completed orders
+        })->count();
+
+        return response()->json(['active_users' => $activeUsers]);
+    }
+
+    /**
+     * Get shifts based on start and end date.
+     */
+    public function getShifts(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        // Get shifts within the specified date range
+        $shifts = Shift::whereBetween('start_time', [$request->start_date, $request->end_date])
+            ->with(['orders' => function ($query) {
+                $query->where('status', 'completed'); // Only completed orders
+            }])
+            ->get();
+
+        // Prepare the response data
+        $shiftRevenue = [];
+
+        foreach ($shifts as $shift) {
+            // Calculate total revenue for the shift
+            $totalRevenue = $shift->orders->sum('total_amount');
+
+            // Add the shift data to the response
+            $shiftRevenue[] = [
+                'shift_id' => $shift->id,
+                'user_id' => $shift->user_id,
+                'start_time' => $shift->start_time,
+                'end_time' => $shift->end_time,
+                'total_revenue' => $totalRevenue,
+            ];
+        }
+
+        return response()->json($shiftRevenue); // Return the data as an array
     }
 }

@@ -14,6 +14,10 @@ class Shift extends Model
         'end_time',
     ];
 
+    protected $casts = [
+        'start_time' => 'datetime',
+    ];
+
     public function orders()
     {
         return $this->hasMany(Order::class);

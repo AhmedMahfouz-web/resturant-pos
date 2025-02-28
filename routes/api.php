@@ -143,12 +143,26 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::post('{shiftId}/close', [ShiftController::class, 'closeShift']);
     });
 
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/sales', [ReportController::class, 'totalSalesThisMonth']);
+        Route::get('/orders', [ReportController::class, 'totalOrdersThisMonth']);
+        Route::get('/canceled-orders', [ReportController::class, 'totalCanceledOrders']);
+        Route::get('/average-order-value', [ReportController::class, 'averageOrderValue']);
+        Route::get('/unique-customers', [ReportController::class, 'uniqueCustomerCount']);
+        Route::get('/top-selling-products', [ReportController::class, 'topSellingProducts']);
+        Route::get('/daily-sales-trend', [ReportController::class, 'dailySalesTrend']);
+        Route::get('/payment-method-breakdown', [ReportController::class, 'paymentMethodBreakdown']);
+        Route::get('/inventory-levels', [ReportController::class, 'inventoryLevels']);
+        Route::get('/user-engagement', [ReportController::class, 'userEngagementMetrics']);
+        Route::get('/shifts', [ReportController::class, 'getShifts']);
+    });
+
     Route::prefix('reports')->group(function () {
         Route::get('/sales', [ReportController::class, 'salesReport']);
         Route::get('/inventory', [ReportController::class, 'inventoryReport']);
         Route::get('/user-activity', [ReportController::class, 'userActivityReport']);
         Route::get('/monthly', [ReportController::class, 'monthlyReport']);
-        Route::get('/top-selling-products', [ReportController::class, 'topSellingProducts']);
+        Route::get('/top-selling-products', [ReportController::class, 'sellingProducts']);
         Route::get('/customer-purchase-history', [ReportController::class, 'customerPurchaseHistory']);
         Route::get('/sales-by-category', [ReportController::class, 'salesByCategory']);
         Route::get('/refunds-and-returns', [ReportController::class, 'refundsAndReturns']);
@@ -156,5 +170,6 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/user-engagement', [ReportController::class, 'userEngagement']);
         Route::get('/inventory-turnover', [ReportController::class, 'inventoryTurnover']);
         Route::get('/payment-method-performance', [ReportController::class, 'paymentMethodPerformance']);
+        Route::get('/shifts', [ReportController::class, 'getShifts']);
     });
 });
