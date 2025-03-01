@@ -26,7 +26,7 @@ class ReportController extends Controller
      */
     public function salesReport(Request $request)
     {
-        $startDate = Carbon::parse($request->get('start_date'));
+        $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
 
         // Set end date to the last minute of the provided end_date or current day
         $endDate = $request->has('end_date')
@@ -122,7 +122,7 @@ class ReportController extends Controller
         $month = $request->get('month', now()->month);
         $year = $request->get('year', now()->year);
 
-        $startDate = Carbon::createFromFormat('Y-m-d', "{$year}-{$month}-01");
+        $startDate = Carbon::createFromFormat('Y-m-d', "{$year}-{$month}-01")->startOfDay();
         // Set end date to the last minute of the last day of the month
         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
