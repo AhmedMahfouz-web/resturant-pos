@@ -174,8 +174,10 @@ class ReportController extends Controller
      */
     public function sellingProducts(Request $request)
     {
-        $startDate = Carbon::parse($request->get('start_date'));
-        $endDate = Carbon::parse($request->get('end_date', Carbon::now()));
+        $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+        $endDate = $request->has('end_date')
+            ? Carbon::parse($request->get('end_date'))->endOfDay()
+            : Carbon::now()->endOfDay();
 
         $topProducts = Order::with('orderItems.product.category')
             ->whereBetween('created_at', [$startDate, $endDate])
