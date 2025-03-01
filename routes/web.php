@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('/test-websocket', function() {
+
+Route::get('/test-websocket', function () {
     return view('test-websocket');
 });
+
+Route::get('/completed-orders-without-shift', [OrderController::class, 'getCompletedOrdersWithoutShift']);

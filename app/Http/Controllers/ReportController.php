@@ -177,7 +177,7 @@ class ReportController extends Controller
         $startDate = Carbon::parse($request->get('start_date'));
         $endDate = Carbon::parse($request->get('end_date', Carbon::now()));
 
-        $topProducts = Order::with('orderItems.product')
+        $topProducts = Order::with('orderItems.product.category')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed')
             ->get()
@@ -189,6 +189,7 @@ class ReportController extends Controller
                 return [
                     'product_id' => $group->first()->product_id,
                     'product_name' => $group->first()->product->name,
+                    'category' => $group->first()->product->category->name,
                     'total_quantity' => $group->sum('quantity'),
                     'total_revenue' => $group->sum('total_amount'),
                 ];
@@ -380,6 +381,7 @@ class ReportController extends Controller
             $monthEnd = $currentMonth->copy()->endOfMonth();
 
             $sales = Order::whereBetween('created_at', [$monthStart, $monthEnd])
+                ->where('status', 'completed')
                 ->sum('total_amount');
 
             $growth = $previousMonthSales > 0
@@ -768,7 +770,7 @@ class ReportController extends Controller
 
         foreach ($shifts as $shift) {
             // Calculate total revenue for the shift
-            $totalRevenue = $shift->orders->where('status', 'completed')->sum('total_amount');
+            $totalRevenue = $shift->orders->sum('total_amount');
 
             // Add the shift data to the response
             $shiftRevenue[] = [

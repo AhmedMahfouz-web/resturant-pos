@@ -335,4 +335,24 @@ class OrderController extends Controller
 
         return $query->paginate(25);
     }
+
+    public function getCompletedOrdersWithoutShift()
+    {
+        // Get all shift IDs
+        $shiftIds = Shift::pluck('id')->toArray();
+
+        // Retrieve completed orders where the shift_id is not in the shifts table
+        $orders = Order::where('status', 'completed')
+            ->whereNotIn('shift_id', $shiftIds)
+            ->with(['orderItems.product', 'user']) // Include order items and user
+            ->get();
+
+        // Calculate the total amount of these orders
+        $totalAmount = $orders->sum('total_amount');
+
+        return response()->json([
+            'orders' => $orders,
+            'total_amount' => $totalAmount,
+        ]);
+    }
 }
