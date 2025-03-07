@@ -31,7 +31,7 @@ class OrderController extends Controller
             return response()->json(Order::with(['orderItems.product', 'user'])->latest()->get());
         } else {
             $shift_id = Shift::select('id')->first();
-            return response()->json(Order::where('shift_id', $shift_id)->with(['orderItems.product', 'user'])->latest()->take(100)->get());
+            return response()->json(Order::where('shift_id', $shift_id->id)->with(['orderItems.product', 'user'])->latest()->take(100)->get());
         }
     }
 
