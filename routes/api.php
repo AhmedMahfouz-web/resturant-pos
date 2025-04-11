@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
@@ -65,6 +67,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/{id}', [ProductController::class, 'editProduct']);       // Update a product
         Route::post('/{id}', [ProductController::class, 'updateProduct']);     // Update a product
         Route::delete('/{id}', [ProductController::class, 'deleteProduct']);  // Delete a product
+
     });
 
     Route::prefix('categories')->group(function () {
@@ -118,6 +121,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::post('', [MaterialController::class, 'store']);
         Route::put('/{id}', [MaterialController::class, 'update']);
         Route::delete('/{id}', [MaterialController::class, 'destroy']);
+        Route::post('/import', [MaterialController::class, 'import']);
     });
 
     Route::prefix('recipes')->group(function () {
@@ -128,6 +132,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/{id}', [RecipeController::class, 'edit']);
         Route::post('/{id}', [RecipeController::class, 'update']);
         Route::delete('/{id}', [RecipeController::class, 'destroy']);
+        Route::post('/import', [RecipeController::class, 'import']);
     });
 
     Route::prefix('payment')->group(function () {
@@ -170,5 +175,15 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/inventory-turnover', [ReportController::class, 'inventoryTurnover']);
         Route::get('/payment-method-performance', [ReportController::class, 'paymentMethodPerformance']);
         Route::get('/shifts', [ReportController::class, 'getShifts']);
+        Route::get('/monthly-cost', [ReportController::class, 'monthlyCost']);
+        Route::get('/{id}/cost-analysis', [ReportController::class, 'productCostComparison']); // Product cost analysis
     });
+
+    Route::prefix('inventory')->group(function () {
+        Route::post('/receipt', [InventoryController::class, 'storeReceipt']);
+        Route::post('/adjust', [InventoryController::class, 'adjustStock']);
+        Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock']);
+        Route::post('/history', [ReportController::class, 'transactionHistory']);
+    });
+
 });

@@ -29,6 +29,27 @@ class Order extends Model
         'manual_reason',
     ];
 
+    protected static function booted()
+    {
+        static::created(function ($order) {
+            foreach ($order->items as $item) {
+                if ($item->menuItem->materials) {
+                    foreach ($item->menuItem->materials as $material) {
+                        $consumedQty = $material->pivot->quantity * $item->quantity;
+                        
+                        InventoryTransaction::create([
+                            'material_id' => $material->id,
+                            'type' => 'consumption',
+                            'quantity' => $consumedQty,
+                            'unit_cost' => $material->unit_cost,
+                            'user_id' => auth()->id()
+                        ]);
+                    }
+                }
+            }
+        });
+    }
+
     public function table()
     {
         return $this->belongsTo(Table::class);
@@ -39,9 +60,14 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function orderItems()
+    public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function totalQuantity()
+    {
+        return $this->items()->sum('quantity');
     }
 
     public function payment()

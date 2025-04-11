@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Shift;
 use App\Models\User;
+use App\Models\InventoryTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -785,5 +786,72 @@ class ReportController extends Controller
         }
 
         return response()->json($shiftRevenue); // Return the data as an array
+    }
+
+    /**
+     * Get monthly cost report.
+     */
+    public function monthlyCost(Request $request)
+    {
+        $month = $request->input('month', now()->format('Y-m'));
+
+        $materials = Material::with(['transactions' => function($query) use ($month) {
+            $query->whereYear('created_at', substr($month, 0, 4))
+                  ->whereMonth('created_at', substr($month, 5, 2));
+        }])->get();
+
+        $totalCost = 0;
+        foreach ($materials as $material) {
+            $consumption = $material->transactions
+                ->where('type', 'consumption')
+                ->sum('quantity');
+
+            $totalCost += $material->calculateFIFOCost($consumption);
+        }
+
+        return response()->json([
+            'total_cost' => $totalCost,
+        ]);
+    }
+
+    /**
+     * Get transaction history.
+     *
+     * This method retrieves all transactions within a specified date range.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transactionHistory(Request $request)
+    {
+        $from = $request->input('from', now()->subMonth()->format('Y-m-d'));
+        $to = $request->input('to', now()->format('Y-m-d'));
+
+        $transactions = InventoryTransaction::with('material')
+            ->whereBetween('created_at', [$from, $to])
+            ->get();
+
+        return response()->json($transactions);
+    }
+
+    public function productCostComparison(Request $request, $productId)
+    {
+        $product = Product::with('materials')->findOrFail($productId);
+        
+        $currentMonth = now()->format('Y-m');
+        $lastMonth = now()->subMonth()->format('Y-m');
+
+        $current = $product->monthlyCostComparison($currentMonth);
+        $last = $product->monthlyCostComparison($lastMonth);
+
+        return response()->json([
+            'product' => $product->name,
+            'current_month' => $current,
+            'last_month' => $last,
+            'comparison' => [
+                'unit_cost_diff' => $current['fifo_cost'] - $last['fifo_cost'],
+                'total_cost_diff' => $current['total_cost'] - $last['total_cost']
+            ]
+        ]);
     }
 }

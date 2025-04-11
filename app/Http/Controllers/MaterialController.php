@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Material;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\MaterialsImport;
 
 class MaterialController extends Controller
 {
@@ -24,14 +26,15 @@ class MaterialController extends Controller
     // Create a new material
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'quantity' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:10',
-            'purchase_price' => 'required|numeric ',
+            'stock_unit' => 'required|string',
+            'recipe_unit' => 'required|string',
+            'conversion_rate' => 'required|numeric'
         ]);
 
-        $material = Material::create($validated);
+        $material = Material::create($validatedData);
 
         return response()->json(['message' => 'Material created successfully', 'material' => $material], 201);
     }
@@ -42,7 +45,9 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'quantity' => 'sometimes|numeric|min:0',
-            'unit' => 'sometimes|string|max:10',
+            'stock_unit' => 'sometimes|string',
+            'recipe_unit' => 'sometimes|string',
+            'conversion_rate' => 'sometimes|numeric'
         ]);
 
         $material = Material::findOrFail($id);
@@ -62,7 +67,7 @@ class MaterialController extends Controller
 
     public function decrementMaterials(Product $product, $quantityOrdered)
     {
-        
+
         // Retrieve the recipe for the product
         $recipe = $product->recipe;
 
@@ -73,6 +78,28 @@ class MaterialController extends Controller
 
             // Decrement the material's quantity
             $material->decrement('quantity', $totalMaterialUsed);
+        }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            Excel::import(new MaterialsImport, $request->file('file'));
+            return response()->json([
+                'success' => true,
+                'message' => 'Materials imported successfully'
+            ]);
+        } catch (\Exception $e) {
+            $errors = json_decode($e->getMessage(), true);
+
+            return response()->json([
+                'success' => false,
+                'errors' => json_last_error() === JSON_ERROR_NONE ? $errors : [$e->getMessage()]
+            ], 422);
         }
     }
 }
