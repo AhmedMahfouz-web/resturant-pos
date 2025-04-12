@@ -63,6 +63,15 @@ class MaterialsImport implements ToCollection, WithHeadingRow
         foreach ($rows as $index => $row) {
             $lineNumber = $index + 2; // Adding 2 (1 for 0-index, 1 for header row)
 
+            if (empty($row['name'])) {
+                $this->errors[] = [
+                    'line' => $lineNumber,
+                    'errors' => ['name' => 'Name is required']
+                ];
+                continue;
+            }else {
+
+
             // // Validate each row individually
             // $validator = Validator::make($row->toArray(), [
             //     'name' => 'required|string|max:255',
@@ -102,6 +111,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                     'errors' => [$e->getMessage()]
                 ];
             }
+        }
         }
 
         if (!empty($this->errors)) {
