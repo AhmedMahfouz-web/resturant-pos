@@ -84,7 +84,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                 DB::transaction(function () use ($row) {
                     $materialData = [
                         'name' => $row['name'],
-                        'current_stock' => $row['current_stock'] ?? 0,
+                        'quantity' => $row['current_stock'] ?? 0,
                         'stock_unit' => $row['stock_unit'],
                         'recipe_unit' => $row['recipe_unit'],
                         'conversion_rate' => $row['conversion_rate'],
