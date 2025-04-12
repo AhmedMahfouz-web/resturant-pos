@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Validators\Failure;
 use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
 
-class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
+class MaterialsImport implements ToCollection, WithHeadingRow
 {
     use Importable;
 
@@ -32,53 +34,51 @@ class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
     /**
      * Validate the headers before processing the data
      */
-    public function withValidator($validator)
+    public function validateHeaders(array $headers)
     {
-        $validator->after(function ($validator) {
-            // Get the raw data to check headers
-            $data = $validator->getData();
+        $missingHeaders = [];
 
-            // Check if all required headers exist
-            foreach ($this->requiredHeaders as $header) {
-                if (!array_key_exists($header, $data)) {
-                    $validator->errors()->add($header, "The {$header} column is required but was not found in the file.");
-                }
+        // Check if all required headers exist
+        foreach ($this->requiredHeaders as $header) {
+            if (!in_array($header, $headers)) {
+                $missingHeaders[] = $header;
             }
-        });
-    }
+        }
 
-    /**
-     * Define validation rules for headers
-     */
-    public function rules(): array
-    {
-        return [
-            // These rules are only for header validation
-            // Actual row validation is done in the collection method
-        ];
+        if (!empty($missingHeaders)) {
+            throw new \Exception('Missing required headers: ' . implode(', ', $missingHeaders));
+        }
+
+        return true;
     }
 
     public function collection(Collection $rows)
     {
+        // Get the headers from the first row
+        if ($rows->count() > 0 && $rows->first()) {
+            $headers = array_keys($rows->first()->toArray());
+            $this->validateHeaders($headers);
+        }
+
         foreach ($rows as $index => $row) {
             $lineNumber = $index + 2; // Adding 2 (1 for 0-index, 1 for header row)
 
             // Validate each row individually
-            // $validator = Validator::make($row->toArray(), [
-            //     'name' => 'required|string|max:255',
-            //     'current_stock' => 'nullable|numeric|min:0',
-            //     'stock_unit' => 'required|string',
-            //     'recipe_unit' => 'required|string',
-            //     'conversion_rate' => 'required|numeric|min:0.0001',
-            // ]);
+            $validator = Validator::make($row->toArray(), [
+                'name' => 'required|string|max:255',
+                'current_stock' => 'nullable|numeric|min:0',
+                'stock_unit' => 'required|string',
+                'recipe_unit' => 'required|string',
+                'conversion_rate' => 'required|numeric|min:0.0001',
+            ]);
 
-            // if ($validator->fails()) {
-            //     $this->errors[] = [
-            //         'line' => $lineNumber,
-            //         'errors' => $validator->errors()->all()
-            //     ];
-            //     continue;
-            // }
+            if ($validator->fails()) {
+                $this->errors[] = [
+                    'line' => $lineNumber,
+                    'errors' => $validator->errors()->all()
+                ];
+                continue;
+            }
 
             try {
                 DB::transaction(function () use ($row) {
