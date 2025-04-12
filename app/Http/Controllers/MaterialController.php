@@ -13,7 +13,16 @@ class MaterialController extends Controller
     public function index()
     {
         $materials = Material::all();
-        return response()->json($materials);
+        return response()->json([
+            'materials' => $materials,
+            'headers' => [
+                'name',
+                'current_stock',
+                'stock_unit',
+                'recipe_unit',
+                'conversion_rate'
+            ],
+        ]);
     }
 
     // Show a single material by ID
