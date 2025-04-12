@@ -20,7 +20,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow
 
             $validator = Validator::make($row->toArray(), [
                 'name' => 'required|string|max:255',
-                'current_stock' => 'required|numeric|min:0',
+                'current_stock' => 'nullable|numeric|min:0',
                 'stock_unit' => 'required|string',
                 'recipe_unit' => 'required|string',
                 'conversion_rate' => 'required|numeric|min:0.0001',
@@ -38,7 +38,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                 DB::transaction(function () use ($row) {
                     $materialData = [
                         'name' => $row['name'],
-                        'current_stock' => $row['current_stock'],
+                        'current_stock' => $row['current_stock'] ?? 0,
                         'stock_unit' => $row['stock_unit'],
                         'recipe_unit' => $row['recipe_unit'],
                         'conversion_rate' => $row['conversion_rate'],

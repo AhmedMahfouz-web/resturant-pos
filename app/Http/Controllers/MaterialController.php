@@ -6,7 +6,7 @@ use App\Models\Material;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Imports\MaterialsImport;
-use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MaterialController extends Controller
 {
@@ -99,7 +99,21 @@ class MaterialController extends Controller
             return response()->json([
                 'success' => false,
                 'errors' => json_last_error() === JSON_ERROR_NONE ? $errors : [$e->getMessage()]
-            ], 422);
+            ], 200);
         }
+    }
+
+    public function excel()
+    {
+        return response()->json([
+            'success' => true,
+            'headers' => [
+                'name',
+                'current_stock',
+                'stock_unit',
+                'recipe_unit',
+                'conversion_rate'
+            ],
+        ]);
     }
 }
