@@ -15,9 +15,9 @@ use Maatwebsite\Excel\Concerns\Importable;
 class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
 {
     use Importable;
-    
+
     protected $errors = [];
-    
+
     /**
      * Required headers for the import file
      */
@@ -37,7 +37,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
         $validator->after(function ($validator) {
             // Get the raw data to check headers
             $data = $validator->getData();
-            
+
             // Check if all required headers exist
             foreach ($this->requiredHeaders as $header) {
                 if (!array_key_exists($header, $data)) {
@@ -46,7 +46,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
             }
         });
     }
-    
+
     /**
      * Define validation rules for headers
      */
@@ -64,21 +64,21 @@ class MaterialsImport implements ToCollection, WithHeadingRow, WithValidation
             $lineNumber = $index + 2; // Adding 2 (1 for 0-index, 1 for header row)
 
             // Validate each row individually
-            $validator = Validator::make($row->toArray(), [
-                'name' => 'required|string|max:255',
-                'current_stock' => 'nullable|numeric|min:0',
-                'stock_unit' => 'required|string',
-                'recipe_unit' => 'required|string',
-                'conversion_rate' => 'required|numeric|min:0.0001',
-            ]);
+            // $validator = Validator::make($row->toArray(), [
+            //     'name' => 'required|string|max:255',
+            //     'current_stock' => 'nullable|numeric|min:0',
+            //     'stock_unit' => 'required|string',
+            //     'recipe_unit' => 'required|string',
+            //     'conversion_rate' => 'required|numeric|min:0.0001',
+            // ]);
 
-            if ($validator->fails()) {
-                $this->errors[] = [
-                    'line' => $lineNumber,
-                    'errors' => $validator->errors()->all()
-                ];
-                continue;
-            }
+            // if ($validator->fails()) {
+            //     $this->errors[] = [
+            //         'line' => $lineNumber,
+            //         'errors' => $validator->errors()->all()
+            //     ];
+            //     continue;
+            // }
 
             try {
                 DB::transaction(function () use ($row) {
