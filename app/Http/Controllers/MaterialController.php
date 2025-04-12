@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Material;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MaterialsImport;
+use Maatwebsite\Excel\Excel;
 
 class MaterialController extends Controller
 {
