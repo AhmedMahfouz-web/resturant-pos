@@ -825,7 +825,7 @@ class ReportController extends Controller
     public function transactionHistory(Request $request)
     {
         $from = $request->input('from', now()->subMonth()->format('Y-m-d'));
-        $to = $request->input('to', now()->lastOfDay()->format('Y-m-d'));
+        $to = $request->input('to', now()->endOfDay()->format('Y-m-d'));
 
         $transactions = InventoryTransaction::with('material')
             ->whereBetween('created_at', [$from, $to])
