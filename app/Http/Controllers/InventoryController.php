@@ -22,7 +22,7 @@ class InventoryController extends Controller
         return DB::transaction(function () use ($validated) {
             foreach ($validated['materials'] as $item) {
                 $material = Material::find($item['material_id']);
-                
+
                 InventoryTransaction::create([
                     'material_id' => $material->id,
                     'type' => 'receipt',
@@ -47,7 +47,7 @@ class InventoryController extends Controller
             'materials.*.material_id' => 'required|exists:materials,id',
             'materials.*.adjustment_type' => 'required|in:add,remove',
             'materials.*.quantity' => 'required|numeric|min:0.01',
-            'materials.*.unit_cost' => 'required|numeric|min:0',
+            'materials.*.unit_cost' => 'nullable|numeric|min:0',
             'reason' => 'required|string|max:255'
         ]);
 
@@ -58,18 +58,23 @@ class InventoryController extends Controller
         DB::transaction(function () use ($request) {
             foreach ($request->materials as $item) {
                 $material = Material::find($item['material_id']);
-                
+
                 $transaction = new InventoryTransaction([
                     'type' => 'adjustment',
                     'quantity' => $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1),
-                    'unit_cost' => $item['unit_cost'],
+                    'unit_cost' => $item['unit_cost'] ?? $material->unit_cost,
                     'user_id' => auth()->id(),
                     'note' => $request->reason
                 ]);
 
                 $material->transactions()->save($transaction);
             }
+
+            $material->current_stock += $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1);
+            $material->unit_cost = $item['unit_cost'] ?? $material->unit_cost;
+            $material->save();
         });
+
 
         return response()->json(['message' => 'تم التعديل بنجاح']);
     }
