@@ -50,7 +50,7 @@ class RecipeController extends Controller
         ]);
 
         // Check if the product already has a recipe
-        if (Recipe::where('product_id', $request->product_id)->exists()) {
+        if (DB::table('recipe_product')->where('product_id', $validated['product_id'])->exists()) {
             return response()->json([
                 'message' => 'Product already has a recipe'
             ], 400);
@@ -58,13 +58,13 @@ class RecipeController extends Controller
 
         // Create the recipe for the product
         $recipe = Recipe::create([
-            'name' => $request->name ?? Product::find($request->product_id)->name . "'s Recipe",
-            'instructions' => $request->instructions ?? null
+            'name' => $validated['name'] ?? Product::find($validated['product_id'])->name . "'s Recipe",
+            'instructions' => $validated['instructions'] ?? null,
         ]);
 
         DB::table('recipe_product')->insert([
             'recipe_id' => $recipe->id,
-            'product_id' => $request->product_id
+            'product_id' => $validated['product_id']
         ]);
 
         // Attach materials to the recipe
