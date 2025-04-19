@@ -831,13 +831,15 @@ class ReportController extends Controller
             ->whereBetween('created_at', [$from, $to])
             ->get();
 
-        return response()->json($transactions);
+        return response()->json([
+            'transactions' => $transactions
+        ], 200);
     }
 
     public function productCostComparison(Request $request, $productId)
     {
         $product = Product::with('materials')->findOrFail($productId);
-        
+
         $currentMonth = now()->format('Y-m');
         $lastMonth = now()->subMonth()->format('Y-m');
 
