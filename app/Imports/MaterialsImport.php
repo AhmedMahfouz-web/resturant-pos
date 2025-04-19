@@ -70,34 +70,35 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                     'errors' => ['name' => 'Name is required']
                 ];
                 continue;
-            } else {
-            try {
-                DB::transaction(function () use ($row) {
-                    $materialData = [
-                        'name' => $row['name'],
-                        'quantity' => $row['current_stock'] ?? 0,
-                        'stock_unit' => $row['stock_unit'],
-                        'recipe_unit' => $row['recipe_unit'],
-                        'conversion_rate' => $row['conversion_rate'],
-                    ];
+            } elseif (!empty($row['name'])) {
+                try {
+                    DB::transaction(function () use ($row) {
+                        $materialData = [
+                            'name' => $row['name'],
+                            'quantity' => $row['current_stock'] ?? 0,
+                            'stock_unit' => $row['stock_unit'],
+                            'recipe_unit' => $row['recipe_unit'],
+                            'conversion_rate' => $row['conversion_rate'],
+                        ];
 
-                    if (!empty($row['id']) && Material::where('id', $row['id'])->exists()) {
-                        Material::where('id', $row['id'])->update($materialData);
-                    } else {
-                        Material::create($materialData);
-                    }
-                });
-            } catch (\Exception $e) {
-                $this->errors[] = [
-                    'line' => $lineNumber,
-                    'errors' => [$e->getMessage()]
-                ];
+                        if (!empty($row['id']) && Material::where('id', $row['id'])->exists()) {
+                            Material::where('id', $row['id'])->update($materialData);
+                        } else {
+                            Material::create($materialData);
+                        }
+                    });
+                } catch (\Exception $e) {
+                    $this->errors[] = [
+                        'line' => $lineNumber,
+                        'errors' => [$e->getMessage()]
+                    ];
+                }
             }
         }
-    }
 
-    if (!empty($this->errors)) {
-        throw new \Exception(json_encode($this->errors));
+        if (!empty($this->errors)) {
+            throw new \Exception(json_encode($this->errors));
+        }
     }
 }
-}
+
