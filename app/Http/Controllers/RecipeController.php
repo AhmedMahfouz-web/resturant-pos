@@ -49,6 +49,13 @@ class RecipeController extends Controller
             'materials.*.material_quantity' => 'required|numeric|min:0.01',
         ]);
 
+        // Check if the product already has a recipe
+        if (Recipe::where('product_id', $request->product_id)->exists()) {
+            return response()->json([
+                'message' => 'Product already has a recipe'
+            ], 400);
+        }
+
         // Create the recipe for the product
         $recipe = Recipe::create([
             'name' => $request->name ?? Product::find($request->product_id)->name . "'s Recipe",
