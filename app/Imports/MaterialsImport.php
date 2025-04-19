@@ -60,7 +60,8 @@ class MaterialsImport implements ToCollection, WithHeadingRow
             $this->validateHeaders($headers);
         }
 
-        foreach ($rows as $index => $row) {
+        foreach ($rows as $index => $row)
+        {
             $lineNumber = $index + 2; // Adding 2 (1 for 0-index, 1 for header row)
 
             if (empty($row['name'])) {
@@ -69,26 +70,7 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                     'errors' => ['name' => 'Name is required']
                 ];
                 continue;
-            }else {
-
-
-            // // Validate each row individually
-            // $validator = Validator::make($row->toArray(), [
-            //     'name' => 'required|string|max:255',
-            //     'current_stock' => 'nullable|numeric|min:0',
-            //     'stock_unit' => 'required|string',
-            //     'recipe_unit' => 'required|string',
-            //     'conversion_rate' => 'required|numeric|min:0.0001',
-            // ]);
-
-            // if ($validator->fails()) {
-            //     $this->errors[] = [
-            //         'line' => $lineNumber,
-            //         'errors' => $validator->errors()->all()
-            //     ];
-            //     continue;
-            // }
-
+            } else {
             try {
                 DB::transaction(function () use ($row) {
                     $materialData = [
@@ -112,10 +94,10 @@ class MaterialsImport implements ToCollection, WithHeadingRow
                 ];
             }
         }
-        }
-
-        if (!empty($this->errors)) {
-            throw new \Exception(json_encode($this->errors));
-        }
     }
+
+    if (!empty($this->errors)) {
+        throw new \Exception(json_encode($this->errors));
+    }
+}
 }

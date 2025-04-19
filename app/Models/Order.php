@@ -32,11 +32,11 @@ class Order extends Model
     protected static function booted()
     {
         static::created(function ($order) {
-            foreach ($order->items as $item) {
-                if ($item->menuItem->materials) {
-                    foreach ($item->menuItem->materials as $material) {
+            foreach ($order->orderItems as $item) {
+                if ($item->product->materials) {
+                    foreach ($item->product->materials as $material) {
                         $consumedQty = $material->pivot->quantity * $item->quantity;
-                        
+
                         InventoryTransaction::create([
                             'material_id' => $material->id,
                             'type' => 'consumption',
@@ -60,7 +60,7 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function items()
+    public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
