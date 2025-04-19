@@ -41,7 +41,7 @@ class RecipeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id|unique',
+            'product_id' => 'required|exists:products,id',
             'name' => 'nullable|string|max:255',
             'instructions' => 'nullable|string',
             'materials' => 'required|array', // Array of material IDs and quantities

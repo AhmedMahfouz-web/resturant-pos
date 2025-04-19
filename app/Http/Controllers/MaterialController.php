@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\MaterialsImport;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Imports\MaterialsImport;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class MaterialController extends Controller
 {
@@ -95,18 +96,34 @@ class MaterialController extends Controller
         ]);
 
         try {
-            Excel::import(new MaterialsImport, $request->file('file'));
+            // Check if the file exists and is valid
+            if (!$request->hasFile('file') || !$request->file('file')->isValid()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid file upload'
+                ], 400);
+            }
+
+            $import = new MaterialsImport();
+            Excel::import($import, $request->file('file'));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Materials imported successfully'
             ]);
         } catch (\Exception $e) {
+            // Log the full exception for debugging
+            Log::error('Material import error: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
             $errors = json_decode($e->getMessage(), true);
 
             return response()->json([
                 'success' => false,
+                'message' => 'Import failed',
+                'error' => $e->getMessage(),
                 'errors' => json_last_error() === JSON_ERROR_NONE ? $errors : [$e->getMessage()]
-            ], 200);
+            ], 500);
         }
     }
 
