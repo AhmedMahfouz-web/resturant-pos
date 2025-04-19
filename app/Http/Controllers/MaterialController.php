@@ -43,7 +43,13 @@ class MaterialController extends Controller
             'conversion_rate' => 'required|numeric'
         ]);
 
-        $material = Material::create($validatedData);
+        $material = Material::create([
+            'name' => $validatedData['name'],
+            'current_stock' => $validatedData['quantity'],
+            'stock_unit' => $validatedData['stock_unit'],
+            'recipe_unit' => $validatedData['recipe_unit'],
+            'conversion_rate' => $validatedData['conversion_rate']
+        ]);
 
         return response()->json(['message' => 'Material created successfully', 'material' => $material], 201);
     }
