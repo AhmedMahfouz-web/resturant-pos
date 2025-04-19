@@ -119,7 +119,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/', [MaterialController::class, 'index']);
         Route::get('/{id}', [MaterialController::class, 'show']);
         Route::post('', [MaterialController::class, 'store']);
-        Route::put('/{id}', [MaterialController::class, 'update']);
+        Route::post('/{id}', [MaterialController::class, 'update']);
         Route::delete('/{id}', [MaterialController::class, 'destroy']);
         Route::post('/import', [MaterialController::class, 'import']);
         Route::get('/excel', [MaterialController::class, 'excel']);

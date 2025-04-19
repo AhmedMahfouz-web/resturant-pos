@@ -37,7 +37,6 @@ class MaterialController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'quantity' => 'required|numeric|min:0',
             'stock_unit' => 'required|string',
             'recipe_unit' => 'required|string',
             'conversion_rate' => 'required|numeric'
@@ -53,7 +52,6 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'quantity' => 'sometimes|numeric|min:0',
             'stock_unit' => 'sometimes|string',
             'recipe_unit' => 'sometimes|string',
             'conversion_rate' => 'sometimes|numeric'
