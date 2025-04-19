@@ -31,7 +31,7 @@ class InventoryController extends Controller
                     'user_id' => auth()->id()
                 ]);
 
-                $material->current_stock += $item['quantity'];
+                $material->quantity += $item['quantity'];
                 $material->unit_cost = $item['unit_cost'];
                 $material->save();
             }
@@ -70,7 +70,7 @@ class InventoryController extends Controller
                 $material->transactions()->save($transaction);
             }
 
-            $material->current_stock += $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1);
+            $material->quantity += $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1);
             $material->unit_cost = $item['unit_cost'] ?? $material->unit_cost;
             $material->save();
         });
