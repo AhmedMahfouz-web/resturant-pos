@@ -27,12 +27,12 @@ class InventoryController extends Controller
                     'material_id' => $material->id,
                     'type' => 'receipt',
                     'quantity' => $item['quantity'],
-                    'unit_cost' => $item['unit_cost'],
+                    'purchase_price' => $item['unit_cost'],
                     'user_id' => auth()->id()
                 ]);
 
                 $material->quantity += $item['quantity'];
-                $material->unit_cost = $item['unit_cost'];
+                $material->purchase_price = $item['unit_cost'];
                 $material->save();
             }
 
@@ -62,7 +62,7 @@ class InventoryController extends Controller
                 $transaction = new InventoryTransaction([
                     'type' => 'adjustment',
                     'quantity' => $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1),
-                    'unit_cost' => $item['unit_cost'] ?? $material->unit_cost,
+                    'purchase_price' => $item['unit_cost'] ?? $material->purchase_price,
                     'user_id' => auth()->id(),
                     'note' => $request->reason
                 ]);
@@ -71,7 +71,7 @@ class InventoryController extends Controller
             }
 
             $material->quantity += $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1);
-            $material->unit_cost = $item['unit_cost'] ?? $material->unit_cost;
+            $material->purchase_price = $item['unit_cost'] ?? $material->purchase_price;
             $material->save();
         });
 

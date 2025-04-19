@@ -15,7 +15,7 @@ class Material extends Model
     protected $fillable = [
         'name',
         'quantity',
-        'unit_cost',
+        'purchase_price',
         'start_month_stock',
         'end_month_stock',
         'stock_unit',
