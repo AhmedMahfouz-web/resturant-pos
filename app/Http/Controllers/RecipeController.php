@@ -9,9 +9,49 @@ use App\Imports\RecipesImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Validator;
 
 class RecipeController extends Controller
 {
+    // Import recipes from Excel/CSV
+    public function import(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        try {
+            $file = $request->file('file')->getRealPath();
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+            $sheetData = $spreadsheet->getActiveSheet()->toArray();
+
+            $recipes = [];
+            foreach (array_slice($sheetData, 1) as $row) {
+                if (!empty($row[0]) && !empty($row[1]) && !empty($row[2])) {
+                    $recipe = \App\Models\Recipe::create([
+                        'product_id' => $row[0],
+                        'material_id' => $row[1],
+                        'material_quantity' => $row[2],
+                    ]);
+                    $recipes[] = $recipe;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Recipes imported successfully',
+                'recipes' => $recipes
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error importing recipes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function index()
     {
         $recipes = Recipe::with('materials')->get();
@@ -119,19 +159,19 @@ class RecipeController extends Controller
         return response()->json(['message' => 'Recipe deleted successfully']);
     }
 
-    public function import(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls',
-        ]);
+    // public function import(Request $request)
+    // {
+    //     $request->validate([
+    //         'file' => 'required|file|mimes:xlsx,xls',
+    //     ]);
 
-        $import = new RecipesImport();
-        Excel::import($import, $request->file('file'));
+    //     $import = new RecipesImport();
+    //     Excel::import($import, $request->file('file'));
 
-        return response()->json([
-            'message' => 'Recipes imported successfully',
-            'count' => Recipe::count(),
-            'errors' => $import->getErrors()
-        ]);
-    }
+    //     return response()->json([
+    //         'message' => 'Recipes imported successfully',
+    //         'count' => Recipe::count(),
+    //         'errors' => $import->getErrors()
+    //     ]);
+    // }
 }

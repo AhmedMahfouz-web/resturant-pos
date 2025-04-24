@@ -183,7 +183,6 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
     Route::prefix('inventory')->group(function () {
         Route::post('/receipt', [InventoryController::class, 'storeReceipt']);
         Route::post('/adjust', [InventoryController::class, 'adjustStock']);
-        Route::post('/inventory/adjust', [InventoryController::class, 'adjustStock']);
         Route::post('/history', [ReportController::class, 'transactionHistory']);
     });
 
