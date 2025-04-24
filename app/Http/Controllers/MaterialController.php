@@ -73,18 +73,31 @@ class MaterialController extends Controller
         } else {
             try {
                 $materials = [];
-                foreach (array_slice($sheetData, 1) as $row) {
+                $errors = [];
+                foreach (array_slice($sheetData, 1) as $index => $row) {
                     if (!empty($row[0])) {
+                        if (!is_numeric($row[4])) {
+                            $errors[] = "Row " . ($index + 2) . " has a non-numeric conversion_rate.";
+                            continue;
+                        }
                         $material = Material::create([
                             'name' => $row[0],
                             'purchase_price' => 0,
                             'quantity' => 0,
                             'stock_unit' => $row[2],
                             'recipe_unit' => $row[3],
-                            'conversion_rate' => $row[4],
+                            'conversion_rate' => (float)$row[4],
                         ]);
                         $materials[] = $material;
                     }
+                }
+
+                if (!empty($errors)) {
+                    return response()->json([
+                        'message' => 'Some rows were not imported due to errors.',
+                        'errors' => $errors,
+                        'materials' => $materials
+                    ], 400);
                 }
 
                 return response()->json([
