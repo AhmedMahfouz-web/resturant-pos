@@ -77,6 +77,7 @@ class MaterialController extends Controller
                     if (!empty($row[0])) {
                         $material = Material::create([
                             'name' => $row[0],
+                            'purchase_price' => 0,
                             'quantity' => 0,
                             'stock_unit' => $row[2],
                             'recipe_unit' => $row[3],

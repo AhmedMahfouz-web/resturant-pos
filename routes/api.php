@@ -117,12 +117,11 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
 
     Route::prefix('materials')->group(function () {
         Route::get('/', [MaterialController::class, 'index']);
+        Route::post('/import', [MaterialController::class, 'import']);
         Route::get('/{id}', [MaterialController::class, 'show']);
         Route::post('', [MaterialController::class, 'store']);
         Route::post('/{id}', [MaterialController::class, 'update']);
         Route::delete('/{id}', [MaterialController::class, 'destroy']);
-        Route::post('/import', [MaterialController::class, 'import']);
-        Route::get('/excel', [MaterialController::class, 'excel']);
     });
 
     Route::prefix('recipes')->group(function () {
