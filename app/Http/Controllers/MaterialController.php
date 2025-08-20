@@ -76,6 +76,10 @@ class MaterialController extends Controller
                 $errors = [];
                 foreach (array_slice($sheetData, 1) as $index => $row) {
                     if (!empty($row[0])) {
+                        if (!empty($row[4]) && !is_numeric($row[4])) {
+                            $errors[] = "Conversion rate is not numeric in Row " . ($index + 2);
+                            continue;
+                        }
                         $material = Material::create([
                             'name' => $row[0],
                             'purchase_price' => 0,

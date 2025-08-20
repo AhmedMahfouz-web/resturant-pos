@@ -35,10 +35,12 @@ class Product extends Model
 
     public function recipe()
     {
-        return $this->belongsToMany(Recipe::class, 'recipe_product', 'product_id', 'recipe_id')->limit(1);
-        // return $this->hasOne(Recipe::class, 'id', 'recipe_id')
-        //     ->join('recipe_product', 'recipes.id', '=', 'recipe_product.recipe_id')
-        //     ->where('recipe_product.product_id', '=', $this->id);
+        return $this->belongsToMany(Recipe::class, 'recipe_product', 'product_id', 'recipe_id');
+    }
+
+    public function recipes()
+    {
+        return $this->belongsToMany(Recipe::class, 'recipe_product', 'product_id', 'recipe_id');
     }
 
     public function calculateBaseCost()
@@ -57,7 +59,7 @@ class Product extends Model
             $history = $material->stockHistory()
                 ->where('period_date', 'like', $month . '%')
                 ->first();
-        
+
             if ($history) {
                 $consumption = $history->start_stock - $history->end_stock;
                 $total += $consumption * $material->unit_cost;
@@ -77,8 +79,8 @@ class Product extends Model
         }
 
         $difference = $fifoCost - $baseCost;
-        $percentage = $baseCost != 0 
-            ? round(($difference / $baseCost) * 100, 2) 
+        $percentage = $baseCost != 0
+            ? round(($difference / $baseCost) * 100, 2)
             : 0;
 
         return [

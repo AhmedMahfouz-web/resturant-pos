@@ -4,16 +4,24 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MaterialReceiptController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecipeController;
+use App\Http\Controllers\RecipeCostController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\StockAlertController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TableController;
+use App\Http\Controllers\WebSocketController;
+use App\Http\Controllers\InventoryDashboardController;
+use App\Http\Controllers\EnhancedInventoryController;
+use App\Http\Controllers\SupplierPerformanceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Database\Events\TransactionCommitted;
@@ -124,6 +132,17 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::delete('/{id}', [MaterialController::class, 'destroy']);
     });
 
+    Route::prefix('material-receipts')->group(function () {
+        Route::get('/', [MaterialReceiptController::class, 'index']);           // Get all material receipts
+        Route::get('/create', [MaterialReceiptController::class, 'create']);    // Get form data for creating receipt
+        Route::post('/', [MaterialReceiptController::class, 'store']);          // Create new material receipt
+        Route::get('/statistics', [MaterialReceiptController::class, 'statistics']); // Get receipt statistics
+        Route::get('/{id}', [MaterialReceiptController::class, 'show']);        // Show specific receipt
+        Route::get('/{id}/batch', [MaterialReceiptController::class, 'getBatch']); // Get batch info for receipt
+        Route::post('/{id}', [MaterialReceiptController::class, 'update']);     // Update receipt (changed to POST for consistency)
+        Route::delete('/{id}', [MaterialReceiptController::class, 'destroy']);  // Delete receipt
+    });
+
     Route::prefix('recipes')->group(function () {
         Route::get('', [RecipeController::class, 'index']);
         Route::get('/show/{id}', [RecipeController::class, 'show']);
@@ -177,6 +196,17 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/shifts', [ReportController::class, 'getShifts']);
         Route::get('/monthly-cost', [ReportController::class, 'monthlyCost']);
         Route::get('/{id}/cost-analysis', [ReportController::class, 'productCostComparison']); // Product cost analysis
+
+        // Enhanced inventory reporting routes
+        Route::get('/types', [ReportController::class, 'reportTypes']);           // Get available report types
+        Route::get('/dashboard-summary', [ReportController::class, 'dashboard']); // Get dashboard summary
+        Route::get('/stock-valuation', [ReportController::class, 'stockValuation']); // Stock valuation report
+        Route::get('/inventory-movement', [ReportController::class, 'inventoryMovement']); // Inventory movement report
+        Route::get('/stock-aging', [ReportController::class, 'stockAging']);      // Stock aging report
+        Route::get('/waste-tracking', [ReportController::class, 'wasteReport']); // Waste tracking report
+        Route::get('/cost-analysis-enhanced', [ReportController::class, 'costAnalysis']); // Enhanced cost analysis report
+        Route::get('/profitability', [ReportController::class, 'profitability']); // Profitability report
+        Route::post('/export', [ReportController::class, 'exportReport']);        // Export report data
     });
 
     Route::prefix('inventory')->group(function () {
@@ -185,4 +215,79 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::post('/history', [ReportController::class, 'transactionHistory']);
     });
 
+    // Enhanced Inventory Management API Endpoints
+    Route::prefix('inventory/enhanced')->group(function () {
+        Route::get('/dashboard', [EnhancedInventoryController::class, 'dashboard']); // Inventory overview dashboard
+        Route::get('/materials', [EnhancedInventoryController::class, 'materials']); // List materials with stock info
+        Route::post('/adjustments', [EnhancedInventoryController::class, 'adjustStock']); // Create stock adjustment
+        Route::get('/valuation', [EnhancedInventoryController::class, 'valuation']); // Get inventory valuation
+        Route::get('/movements', [EnhancedInventoryController::class, 'movements']); // Get stock movement history
+        Route::get('/batches', [EnhancedInventoryController::class, 'batches']); // List stock batches
+        Route::get('/materials/{materialId}/batches', [EnhancedInventoryController::class, 'materialBatches']); // Get batches for material
+        Route::get('/expiry-tracking', [EnhancedInventoryController::class, 'expiryTracking']); // Expiry tracking endpoints
+    });
+
+    Route::prefix('suppliers')->group(function () {
+        Route::get('/', [SupplierController::class, 'index']);                    // Get all suppliers
+        Route::post('/', [SupplierController::class, 'store']);                   // Create new supplier
+        Route::get('/{supplier}', [SupplierController::class, 'show']);           // Show specific supplier
+        Route::put('/{supplier}', [SupplierController::class, 'update']);         // Update supplier
+        Route::delete('/{supplier}', [SupplierController::class, 'destroy']);     // Delete supplier
+        Route::get('/{supplier}/performance', [SupplierController::class, 'performance']); // Get supplier performance
+        Route::post('/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus']); // Toggle active status
+    });
+
+    // Supplier Performance Tracking Routes
+    Route::prefix('suppliers/performance')->group(function () {
+        Route::get('/comparison', [SupplierPerformanceController::class, 'getPerformanceComparison']); // Compare supplier performance
+        Route::post('/bulk-update', [SupplierPerformanceController::class, 'bulkUpdatePerformanceMetrics']); // Bulk update metrics
+        Route::get('/{supplier}/metrics', [SupplierPerformanceController::class, 'getPerformanceMetrics']); // Get detailed performance metrics
+        Route::post('/{supplier}/metrics/update', [SupplierPerformanceController::class, 'updatePerformanceMetrics']); // Update performance metrics
+        Route::get('/{supplier}/delivery', [SupplierPerformanceController::class, 'getDeliveryPerformance']); // Get delivery performance
+        Route::get('/{supplier}/communication', [SupplierPerformanceController::class, 'getCommunicationAnalysis']); // Get communication analysis
+        Route::post('/{supplier}/communication', [SupplierPerformanceController::class, 'createCommunication']); // Create communication record
+        Route::put('/communication/{communication}/response', [SupplierPerformanceController::class, 'updateCommunicationResponse']); // Update communication response
+    });
+
+    Route::prefix('stock-alerts')->group(function () {
+        Route::get('/', [StockAlertController::class, 'index']);                  // Get all stock alerts
+        Route::get('/statistics', [StockAlertController::class, 'statistics']);   // Get alert statistics
+        Route::post('/generate', [StockAlertController::class, 'generate']);      // Generate new alerts
+        Route::post('/bulk-resolve', [StockAlertController::class, 'bulkResolve']); // Bulk resolve alerts
+        Route::post('/cleanup', [StockAlertController::class, 'cleanup']);        // Cleanup old resolved alerts
+        Route::get('/{stockAlert}', [StockAlertController::class, 'show']);       // Show specific alert
+        Route::post('/{stockAlert}/resolve', [StockAlertController::class, 'resolve']); // Resolve alert
+        Route::post('/{stockAlert}/unresolve', [StockAlertController::class, 'unresolve']); // Unresolve alert
+    });
+
+    Route::prefix('recipe-costs')->group(function () {
+        Route::get('/statistics', [RecipeCostController::class, 'getCostCalculationStatistics']); // Get cost statistics
+        Route::post('/update-all', [RecipeCostController::class, 'updateAllProductCosts']); // Update all product costs
+        Route::post('/compare', [RecipeCostController::class, 'compareRecipeCosts']); // Compare recipe costs
+        Route::post('/analysis-report', [RecipeCostController::class, 'generateCostAnalysisReport']); // Generate cost analysis report
+        Route::post('/recipes/{recipe}/calculate', [RecipeCostController::class, 'calculateRecipeCost']); // Calculate recipe cost
+        Route::get('/recipes/{recipe}/analysis', [RecipeCostController::class, 'getRecipeCostAnalysis']); // Get recipe cost analysis
+        Route::get('/recipes/{recipe}/history', [RecipeCostController::class, 'getRecipeCostHistory']); // Get recipe cost history
+        Route::post('/products/{product}/theoretical-vs-actual', [RecipeCostController::class, 'getTheoreticalVsActualCost']); // Get cost comparison
+    });
+
+    Route::prefix('websocket')->group(function () {
+        Route::get('/dashboard', [WebSocketController::class, 'getDashboardData']);     // Get real-time dashboard data
+        Route::post('/dashboard/broadcast', [WebSocketController::class, 'broadcastDashboardUpdate']); // Force dashboard update
+        Route::post('/materials/status', [WebSocketController::class, 'getMaterialStatus']); // Get material status
+        Route::get('/alerts/active', [WebSocketController::class, 'getActiveAlerts']);  // Get active alerts
+        Route::post('/test', [WebSocketController::class, 'testBroadcast']);            // Test WebSocket broadcast
+        Route::get('/info', [WebSocketController::class, 'getConnectionInfo']);         // Get connection info
+    });
+
+    // Real-time Inventory Dashboard Routes
+    Route::prefix('inventory/realtime')->group(function () {
+        Route::get('/dashboard', [InventoryDashboardController::class, 'getDashboardData']); // Get real-time dashboard data
+        Route::get('/status', [InventoryDashboardController::class, 'getInventoryStatus']); // Get inventory status
+        Route::get('/alerts', [InventoryDashboardController::class, 'getActiveAlerts']); // Get active alerts
+        Route::get('/expiring-batches', [InventoryDashboardController::class, 'getExpiringBatches']); // Get expiring batches
+        Route::get('/movements', [InventoryDashboardController::class, 'getRecentMovements']); // Get recent movements
+        Route::get('/materials/{materialId}', [InventoryDashboardController::class, 'getMaterialData']); // Get material-specific data
+        Route::post('/broadcast-update', [InventoryDashboardController::class, 'broadcastDashboardUpdate']); // Trigger dashboard update
+    });
 });

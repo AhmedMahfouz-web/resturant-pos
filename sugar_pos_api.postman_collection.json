@@ -1,0 +1,932 @@
+{
+	"info": {
+		"_postman_id": "a8a2a1b1-7b7b-4b7b-8b7b-1b1b1b1b1b1b",
+		"name": "Sugar POS API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get available report types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/types",
+							"host": ["{{base_url}}"],
+							"path": ["api", "types"]
+						}
+					}
+				},
+				{
+					"name": "Get dashboard summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard-summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard-summary"]
+						}
+					}
+				},
+				{
+					"name": "Stock valuation report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-valuation",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-valuation"]
+						}
+					}
+				},
+				{
+					"name": "Inventory movement report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory-movement",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory-movement"]
+						}
+					}
+				},
+				{
+					"name": "Stock aging report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-aging",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-aging"]
+						}
+					}
+				},
+				{
+					"name": "Waste tracking report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/waste-tracking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "waste-tracking"]
+						}
+					}
+				},
+				{
+					"name": "Enhanced cost analysis report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cost-analysis-enhanced",
+							"host": ["{{base_url}}"],
+							"path": ["api", "cost-analysis-enhanced"]
+						}
+					}
+				},
+				{
+					"name": "Profitability report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/profitability",
+							"host": ["{{base_url}}"],
+							"path": ["api", "profitability"]
+						}
+					}
+				},
+				{
+					"name": "Export Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"sales_report\",\n    \"start_date\": \"2023-01-01\",\n    \"end_date\": \"2023-12-31\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/export",
+							"host": ["{{base_url}}"],
+							"path": ["api", "export"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Enhanced Inventory",
+			"item": [
+				{
+					"name": "Inventory overview dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "List materials with stock info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/materials",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "materials"]
+						}
+					}
+				},
+				{
+					"name": "Create stock adjustment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"material_id\": 1,\n    \"quantity\": 10.5,\n    \"type\": \"add\",\n    \"reason\": \"Stock correction\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/adjustments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "adjustments"]
+						}
+					}
+				},
+				{
+					"name": "Get inventory valuation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/valuation",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "valuation"]
+						}
+					}
+				},
+				{
+					"name": "Get stock movement history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/movements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "movements"]
+						}
+					}
+				},
+				{
+					"name": "List stock batches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/batches",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "batches"]
+						}
+					}
+				},
+				{
+					"name": "Get batches for material",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/materials/:materialId/batches",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "materials", ":materialId", "batches"],
+							"variable": [{"key": "materialId", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Expiry tracking endpoints",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/enhanced/expiry-tracking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "enhanced", "expiry-tracking"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Suppliers",
+			"item": [
+				{
+					"name": "Get all suppliers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers"]
+						}
+					}
+				},
+				{
+					"name": "Create new supplier",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New Supplier\",\n    \"contact_person\": \"John Doe\",\n    \"email\": \"johndoe@example.com\",\n    \"phone\": \"1234567890\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/suppliers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers"]
+						}
+					}
+				},
+				{
+					"name": "Show specific supplier",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/:supplier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", ":supplier"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Update supplier",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/:supplier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", ":supplier"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Delete supplier",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/:supplier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", ":supplier"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get supplier performance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/:supplier/performance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", ":supplier", "performance"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Toggle active status",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/:supplier/toggle-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", ":supplier", "toggle-status"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Supplier Performance",
+			"item": [
+				{
+					"name": "Compare supplier performance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/comparison",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", "comparison"]
+						}
+					}
+				},
+				{
+					"name": "Bulk update metrics",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"updates\": [\n        {\"supplier_id\": 1, \"metric\": \"delivery_time\", \"value\": 2},\n        {\"supplier_id\": 2, \"metric\": \"quality_rating\", \"value\": 4.8}\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/bulk-update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", "bulk-update"]
+						}
+					}
+				},
+				{
+					"name": "Get detailed performance metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/:supplier/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", ":supplier", "metrics"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Update performance metrics",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"delivery_time\": 3,\n    \"quality_rating\": 4.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/:supplier/metrics/update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", ":supplier", "metrics", "update"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get delivery performance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/:supplier/delivery",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", ":supplier", "delivery"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get communication analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/:supplier/communication",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", ":supplier", "communication"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Create communication record",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"channel\": \"email\",\n    \"outcome\": \"resolved\",\n    \"notes\": \"Discussed new pricing.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/:supplier/communication",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", ":supplier", "communication"],
+							"variable": [{"key": "supplier", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Update communication response",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/suppliers/performance/communication/:communication/response",
+							"host": ["{{base_url}}"],
+							"path": ["api", "suppliers", "performance", "communication", ":communication", "response"],
+							"variable": [{"key": "communication", "value": "1"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Stock Alerts",
+			"item": [
+				{
+					"name": "Get all stock alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts"]
+						}
+					}
+				},
+				{
+					"name": "Get alert statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/statistics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", "statistics"]
+						}
+					}
+				},
+				{
+					"name": "Generate new alerts",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/generate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Bulk resolve alerts",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"alert_ids\": [1, 2, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/bulk-resolve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", "bulk-resolve"]
+						}
+					}
+				},
+				{
+					"name": "Cleanup old resolved alerts",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/cleanup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", "cleanup"]
+						}
+					}
+				},
+				{
+					"name": "Show specific alert",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/:stockAlert",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", ":stockAlert"],
+							"variable": [{"key": "stockAlert", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Resolve alert",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/:stockAlert/resolve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", ":stockAlert", "resolve"],
+							"variable": [{"key": "stockAlert", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Unresolve alert",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stock-alerts/:stockAlert/unresolve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stock-alerts", ":stockAlert", "unresolve"],
+							"variable": [{"key": "stockAlert", "value": "1"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Recipe Costs",
+			"item": [
+				{
+					"name": "Get cost calculation statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/statistics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "statistics"]
+						}
+					}
+				},
+				{
+					"name": "Update all product costs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/update-all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "update-all"]
+						}
+					}
+				},
+				{
+					"name": "Compare recipe costs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipe_ids\": [1, 2, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/compare",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "compare"]
+						}
+					}
+				},
+				{
+					"name": "Generate cost analysis report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipe_ids\": [1, 2],\n    \"start_date\": \"2023-01-01\",\n    \"end_date\": \"2023-12-31\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/analysis-report",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "analysis-report"]
+						}
+					}
+				},
+				{
+					"name": "Calculate recipe cost",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/recipes/:recipe/calculate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "recipes", ":recipe", "calculate"],
+							"variable": [{"key": "recipe", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get recipe cost analysis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/recipes/:recipe/analysis",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "recipes", ":recipe", "analysis"],
+							"variable": [{"key": "recipe", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get recipe cost history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/recipes/:recipe/history",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "recipes", ":recipe", "history"],
+							"variable": [{"key": "recipe", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Get cost comparison",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"start_date\": \"2023-01-01\",\n    \"end_date\": \"2023-01-31\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/recipe-costs/products/:product/theoretical-vs-actual",
+							"host": ["{{base_url}}"],
+							"path": ["api", "recipe-costs", "products", ":product", "theoretical-vs-actual"],
+							"variable": [{"key": "product", "value": "1"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Websocket",
+			"item": [
+				{
+					"name": "Get real-time dashboard data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/websocket/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Force dashboard update",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/websocket/dashboard/broadcast",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "dashboard", "broadcast"]
+						}
+					}
+				},
+				{
+					"name": "Get material status",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"material_ids\": [1, 5, 10]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/websocket/materials/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "materials", "status"]
+						}
+					}
+				},
+				{
+					"name": "Get active alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/websocket/alerts/active",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "alerts", "active"]
+						}
+					}
+				},
+				{
+					"name": "Test WebSocket broadcast",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"test.event\",\n    \"data\": {\n        \"message\": \"Hello, WebSocket!\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/websocket/test",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "test"]
+						}
+					}
+				},
+				{
+					"name": "Get connection info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/websocket/info",
+							"host": ["{{base_url}}"],
+							"path": ["api", "websocket", "info"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Real-time Inventory Dashboard",
+			"item": [
+				{
+					"name": "Get real-time dashboard data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Get inventory status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "status"]
+						}
+					}
+				},
+				{
+					"name": "Get active alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/alerts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "alerts"]
+						}
+					}
+				},
+				{
+					"name": "Get expiring batches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/expiring-batches",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "expiring-batches"]
+						}
+					}
+				},
+				{
+					"name": "Get recent movements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/movements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "movements"]
+						}
+					}
+				},
+				{
+					"name": "Get material-specific data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/materials/:materialId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "materials", ":materialId"],
+							"variable": [{"key": "materialId", "value": "1"}]
+						}
+					}
+				},
+				{
+					"name": "Trigger dashboard update",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/inventory/realtime/broadcast-update",
+							"host": ["{{base_url}}"],
+							"path": ["api", "inventory", "realtime", "broadcast-update"]
+						}
+					}
+				}
+			]
+		}
+	]
+,
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

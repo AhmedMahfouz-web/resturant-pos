@@ -28,10 +28,10 @@ class OrderController extends Controller
     public function index()
     {
         if (auth()->user()->can('old reciept')) {
-            return response()->json(Order::with(['orderItems.product', 'user'])->latest()->get());
+            return response()->json(Order::with(['orderItems.product', 'user'])->latest()->paginate(10));
         } else {
             $shift_id = Shift::select('id')->first();
-            return response()->json(Order::where('shift_id', $shift_id->id)->with(['orderItems.product', 'user'])->latest()->take(100)->get());
+            return response()->json(Order::where('shift_id', $shift_id->id)->with(['orderItems.product', 'user'])->latest()->paginate(10));
         }
     }
 

@@ -15,7 +15,10 @@ class InventoryTransaction extends Model
         'unit_cost',
         'material_id',
         'user_id',
-        'remaining_quantity'
+        'remaining_quantity',
+        'reference_type',
+        'reference_id',
+        'notes'
     ];
 
     protected static function booted()
@@ -54,5 +57,10 @@ class InventoryTransaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reference()
+    {
+        return $this->morphTo();
     }
 }

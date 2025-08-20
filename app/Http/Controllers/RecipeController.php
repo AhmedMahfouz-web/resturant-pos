@@ -32,7 +32,7 @@ class RecipeController extends Controller
             $recipes = [];
             foreach (array_slice($sheetData, 1) as $row) {
                 if (!empty($row[0]) && !empty($row[1]) && !empty($row[2])) {
-                    $recipe = \App\Models\Recipe::create([
+                    $recipe = Recipe::create([
                         'product_id' => $row[0],
                         'material_id' => $row[1],
                         'material_quantity' => $row[2],
