@@ -54,11 +54,15 @@ class EnhancedInventoryController extends Controller
                 ->get()
                 ->map(function ($transaction) {
                     return [
-                        'id' => $transaction->id,
+                        'transaction_id' => $transaction->id,
+                        'material_id' => $transaction->material_id,
                         'material_name' => $transaction->material->name,
                         'type' => $transaction->type,
                         'quantity' => $transaction->quantity,
                         'stock_unit' => $transaction->material->stock_unit,
+                        'old_quantity' => $transaction->old_quantity,
+                        'new_quantity' => $transaction->new_quantity,
+                        'adjustment_quantity' => $transaction->adjustment_quantity,
                         'created_at' => $transaction->created_at->toISOString()
                     ];
                 });
@@ -239,9 +243,12 @@ class EnhancedInventoryController extends Controller
                 // Create inventory transaction
                 $transaction = InventoryTransaction::create([
                     'material_id' => $material->id,
-                    'type' => 'adjustment',
+                    'type' => $adjustmentType,
                     'quantity' => $transactionQuantity,
                     'unit_cost' => $unitCost,
+                    'old_quantity' => $oldQuantity,
+                    'new_quantity' => $newQuantity,
+                    'adjustment_quantity' => $transactionQuantity,
                     'user_id' => auth()->id(),
                     'notes' => $request->reason . ($request->notes ? ' - ' . $request->notes : '')
                 ]);
@@ -383,7 +390,7 @@ class EnhancedInventoryController extends Controller
 
             $movements->getCollection()->transform(function ($transaction) {
                 return [
-                    'id' => $transaction->id,
+                    'transaction_id' => $transaction->id,
                     'material_id' => $transaction->material_id,
                     'material_name' => $transaction->material->name,
                     'type' => $transaction->type,
@@ -391,6 +398,9 @@ class EnhancedInventoryController extends Controller
                     'stock_unit' => $transaction->material->stock_unit,
                     'unit_cost' => $transaction->unit_cost,
                     'total_cost' => $transaction->quantity * $transaction->unit_cost,
+                    'old_quantity' => $transaction->old_quantity,
+                    'new_quantity' => $transaction->new_quantity,
+                    'adjustment_quantity' => $transaction->adjustment_quantity,
                     'user_id' => $transaction->user_id,
                     'notes' => $transaction->notes,
                     'created_at' => $transaction->created_at->toISOString()
