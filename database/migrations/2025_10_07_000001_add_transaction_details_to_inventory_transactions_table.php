@@ -10,10 +10,16 @@ return new class extends Migration
     public function up()
     {
         Schema::table('inventory_transactions', function (Blueprint $table) {
-            // Add new columns for transaction details
-            $table->decimal('old_quantity', 10, 2)->nullable()->after('unit_cost');
-            $table->decimal('new_quantity', 10, 2)->nullable()->after('old_quantity');
-            $table->decimal('adjustment_quantity', 10, 2)->nullable()->after('new_quantity');
+            // Add new columns for transaction details only if they don't exist
+            if (!Schema::hasColumn('inventory_transactions', 'old_quantity')) {
+                $table->decimal('old_quantity', 10, 2)->nullable()->after('unit_cost');
+            }
+            if (!Schema::hasColumn('inventory_transactions', 'new_quantity')) {
+                $table->decimal('new_quantity', 10, 2)->nullable()->after('old_quantity');
+            }
+            if (!Schema::hasColumn('inventory_transactions', 'adjustment_quantity')) {
+                $table->decimal('adjustment_quantity', 10, 2)->nullable()->after('new_quantity');
+            }
         });
 
         // Update the enum type to include new adjustment types
