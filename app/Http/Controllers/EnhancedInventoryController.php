@@ -379,7 +379,7 @@ class EnhancedInventoryController extends Controller
             }
 
             $movements = $query->orderBy('created_at', 'desc')
-                ->paginate($request->get('per_page', 50));
+                ->paginate($request->get('per_page', 10));
 
             $movements->getCollection()->transform(function ($transaction) {
                 return [

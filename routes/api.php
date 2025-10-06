@@ -221,6 +221,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/materials', [EnhancedInventoryController::class, 'materials']); // List materials with stock info
         Route::post('/adjust', [EnhancedInventoryController::class, 'adjustStock']); // Create stock adjustment
         Route::get('/valuation', [EnhancedInventoryController::class, 'valuation']); // Get inventory valuation
+        Route::post('/history', [EnhancedInventoryController::class, 'movements']); // Get stock movement history
         Route::post('/movements', [EnhancedInventoryController::class, 'movements']); // Get stock movement history
         Route::get('/batches', [EnhancedInventoryController::class, 'batches']); // List stock batches
         Route::get('/materials/{materialId}/batches', [EnhancedInventoryController::class, 'materialBatches']); // Get batches for material
