@@ -1,0 +1,58 @@
+version: "3.8"
+networks:
+  sugar_pos_network:
+    driver: bridge
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sugar_pos_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www
+      - /var/www/vendor
+    depends_on:
+      - db
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=sugar_pos
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+    networks:
+      - sugar_pos_network
+    command: >
+      sh -c "
+        composer install &&
+        php artisan key:generate &&
+        php artisan migrate --force &&
+        php artisan db:seed --force &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  db:
+    image: mysql:8.0
+    container_name: sugar_pos_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: sugar_pos
+      MYSQL_USER: sugar_user
+      MYSQL_PASSWORD: sugar_password
+    networks:
+      - sugar_pos_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:

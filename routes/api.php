@@ -209,19 +209,19 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::post('/export', [ReportController::class, 'exportReport']);        // Export report data
     });
 
-    Route::prefix('inventory')->group(function () {
-        Route::post('/receipt', [InventoryController::class, 'storeReceipt']);
-        Route::post('/adjust', [InventoryController::class, 'adjustStock']);
-        Route::post('/history', [ReportController::class, 'transactionHistory']);
-    });
+    // Route::prefix('inventory')->group(function () {
+    //     Route::post('/receipt', [InventoryController::class, 'storeReceipt']);
+    //     Route::post('/adjust', [InventoryController::class, 'adjustStock']);
+    //     Route::post('/history', [ReportController::class, 'transactionHistory']);
+    // });
 
     // Enhanced Inventory Management API Endpoints
-    Route::prefix('inventory/enhanced')->group(function () {
+    Route::prefix('inventory')->group(function () {
         Route::get('/dashboard', [EnhancedInventoryController::class, 'dashboard']); // Inventory overview dashboard
         Route::get('/materials', [EnhancedInventoryController::class, 'materials']); // List materials with stock info
-        Route::post('/adjustments', [EnhancedInventoryController::class, 'adjustStock']); // Create stock adjustment
+        Route::post('/adjust', [EnhancedInventoryController::class, 'adjustStock']); // Create stock adjustment
         Route::get('/valuation', [EnhancedInventoryController::class, 'valuation']); // Get inventory valuation
-        Route::get('/movements', [EnhancedInventoryController::class, 'movements']); // Get stock movement history
+        Route::post('/movements', [EnhancedInventoryController::class, 'movements']); // Get stock movement history
         Route::get('/batches', [EnhancedInventoryController::class, 'batches']); // List stock batches
         Route::get('/materials/{materialId}/batches', [EnhancedInventoryController::class, 'materialBatches']); // Get batches for material
         Route::get('/expiry-tracking', [EnhancedInventoryController::class, 'expiryTracking']); // Expiry tracking endpoints

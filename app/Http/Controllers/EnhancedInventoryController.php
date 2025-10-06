@@ -198,80 +198,97 @@ class EnhancedInventoryController extends Controller
      */
     public function adjustStock(StockAdjustmentRequest $request): JsonResponse
     {
-
         try {
             DB::beginTransaction();
 
-            $material = Material::findOrFail($request->material_id);
-            $oldQuantity = $material->quantity;
-            $adjustmentQuantity = $request->quantity;
+            // Set default adjustment type to 'increase' if null
+            $adjustmentType = $request->adjustment_type ?? 'increase';
 
-            // Calculate new quantity based on adjustment type
-            switch ($request->adjustment_type) {
-                case 'increase':
-                    $newQuantity = $oldQuantity + $adjustmentQuantity;
-                    $transactionQuantity = $adjustmentQuantity;
-                    break;
-                case 'decrease':
-                    $newQuantity = max(0, $oldQuantity - $adjustmentQuantity);
-                    $transactionQuantity = -min($adjustmentQuantity, $oldQuantity);
-                    break;
-                case 'set':
-                    $newQuantity = $adjustmentQuantity;
-                    $transactionQuantity = $newQuantity - $oldQuantity;
-                    break;
-            }
+            $results = [];
+            $totalTransactions = 0;
 
-            // Update material quantity
-            $material->quantity = $newQuantity;
-            if ($request->has('unit_cost')) {
-                $material->purchase_price = $request->unit_cost;
-            }
-            $material->save();
+            foreach ($request->materials as $materialData) {
+                $material = Material::findOrFail($materialData['material_id']);
+                $oldQuantity = $material->quantity;
+                $adjustmentQuantity = $materialData['quantity'];
+                $unitCost = $materialData['unit_cost'] ?? $material->purchase_price;
 
-            // Create inventory transaction
-            $transaction = InventoryTransaction::create([
-                'material_id' => $material->id,
-                'type' => 'adjustment',
-                'quantity' => $transactionQuantity,
-                'unit_cost' => $request->unit_cost ?? $material->purchase_price,
-                'user_id' => auth()->id(),
-                'notes' => $request->reason . ($request->notes ? ' - ' . $request->notes : '')
-            ]);
+                // Calculate new quantity based on adjustment type
+                switch ($adjustmentType) {
+                    case 'increase':
+                        $newQuantity = $oldQuantity + $adjustmentQuantity;
+                        $transactionQuantity = $adjustmentQuantity;
+                        break;
+                    case 'decrease':
+                        $newQuantity = max(0, $oldQuantity - $adjustmentQuantity);
+                        $transactionQuantity = -min($adjustmentQuantity, $oldQuantity);
+                        break;
+                    case 'set':
+                        $newQuantity = $adjustmentQuantity;
+                        $transactionQuantity = $newQuantity - $oldQuantity;
+                        break;
+                }
 
-            // If it's an increase, create a stock batch
-            if ($request->adjustment_type === 'increase' && $adjustmentQuantity > 0) {
-                StockBatch::create([
+                // Update material quantity
+                $material->quantity = $newQuantity;
+                if (isset($materialData['unit_cost'])) {
+                    $material->purchase_price = $materialData['unit_cost'];
+                }
+                $material->save();
+
+                // Create inventory transaction
+                $transaction = InventoryTransaction::create([
                     'material_id' => $material->id,
-                    'batch_number' => 'ADJ-' . now()->format('Ymd-His'),
-                    'quantity' => $adjustmentQuantity,
-                    'remaining_quantity' => $adjustmentQuantity,
-                    'unit_cost' => $request->unit_cost ?? $material->purchase_price,
-                    'received_date' => now(),
-                    'supplier_id' => $material->default_supplier_id
+                    'type' => 'adjustment',
+                    'quantity' => $transactionQuantity,
+                    'unit_cost' => $unitCost,
+                    'user_id' => auth()->id(),
+                    'notes' => $request->reason . ($request->notes ? ' - ' . $request->notes : '')
                 ]);
-            }
 
-            // Broadcast the adjustment
-            $this->broadcastService->broadcastStockAdjustment($material, [
-                'quantity' => $transactionQuantity,
-                'reason' => $request->reason,
-                'user_id' => auth()->id(),
-                'old_quantity' => $oldQuantity,
-                'new_quantity' => $newQuantity
-            ]);
+                // If it's an increase, create a stock batch
+                if ($adjustmentType === 'increase' && $adjustmentQuantity > 0) {
+                    StockBatch::create([
+                        'material_id' => $material->id,
+                        'batch_number' => 'ADJ-' . now()->format('Ymd-His') . '-' . $material->id,
+                        'quantity' => $adjustmentQuantity,
+                        'remaining_quantity' => $adjustmentQuantity,
+                        'unit_cost' => $unitCost,
+                        'received_date' => now(),
+                        'supplier_id' => $material->default_supplier_id
+                    ]);
+                }
+
+                $results[] = [
+                    'transaction_id' => $transaction->id,
+                    'material_id' => $material->id,
+                    'material_name' => $material->name,
+                    'old_quantity' => $oldQuantity,
+                    'new_quantity' => $newQuantity,
+                    'adjustment_quantity' => $transactionQuantity
+                ];
+
+                $totalTransactions++;
+
+                // Broadcast the adjustment
+                // $this->broadcastService->broadcastStockAdjustment($material, [
+                //     'quantity' => $transactionQuantity,
+                //     'reason' => $request->reason,
+                //     'user_id' => auth()->id(),
+                //     'old_quantity' => $oldQuantity,
+                //     'new_quantity' => $newQuantity
+                // ]);
+            }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Stock adjustment completed successfully',
+                'message' => "Stock adjustment completed successfully for {$totalTransactions} material(s)",
                 'data' => [
-                    'transaction_id' => $transaction->id,
-                    'material_id' => $material->id,
-                    'old_quantity' => $oldQuantity,
-                    'new_quantity' => $newQuantity,
-                    'adjustment_quantity' => $transactionQuantity
+                    'adjustment_type' => $adjustmentType,
+                    'total_materials_adjusted' => $totalTransactions,
+                    'materials' => $results
                 ]
             ]);
         } catch (\Exception $e) {

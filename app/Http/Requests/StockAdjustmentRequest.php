@@ -20,11 +20,12 @@ class StockAdjustmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'material_id' => 'required|exists:materials,id',
-            'adjustment_type' => 'required|in:increase,decrease,set',
-            'quantity' => 'required|numeric|min:0',
+            'materials' => 'required|array|min:1',
+            'materials.*.material_id' => 'required|exists:materials,id',
+            'materials.*.quantity' => 'required|numeric|min:0',
+            'materials.*.unit_cost' => 'nullable|numeric|min:0',
+            'adjustment_type' => 'nullable|in:increase,decrease,set',
             'reason' => 'required|string|max:255',
-            'unit_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500'
         ];
     }
@@ -35,17 +36,19 @@ class StockAdjustmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'material_id.required' => 'Material selection is required.',
-            'material_id.exists' => 'Selected material does not exist.',
-            'adjustment_type.required' => 'Adjustment type is required.',
+            'materials.required' => 'Materials selection is required.',
+            'materials.array' => 'Materials must be an array.',
+            'materials.min' => 'At least one material is required.',
+            'materials.*.material_id.required' => 'Material selection is required.',
+            'materials.*.material_id.exists' => 'Selected material does not exist.',
+            'materials.*.quantity.required' => 'Quantity is required.',
+            'materials.*.quantity.numeric' => 'Quantity must be a number.',
+            'materials.*.quantity.min' => 'Quantity must be greater than or equal to 0.',
+            'materials.*.unit_cost.numeric' => 'Unit cost must be a number.',
+            'materials.*.unit_cost.min' => 'Unit cost must be greater than or equal to 0.',
             'adjustment_type.in' => 'Adjustment type must be increase, decrease, or set.',
-            'quantity.required' => 'Quantity is required.',
-            'quantity.numeric' => 'Quantity must be a number.',
-            'quantity.min' => 'Quantity must be greater than or equal to 0.',
             'reason.required' => 'Reason for adjustment is required.',
             'reason.max' => 'Reason cannot exceed 255 characters.',
-            'unit_cost.numeric' => 'Unit cost must be a number.',
-            'unit_cost.min' => 'Unit cost must be greater than or equal to 0.',
             'notes.max' => 'Notes cannot exceed 500 characters.'
         ];
     }
@@ -56,9 +59,10 @@ class StockAdjustmentRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'material_id' => 'material',
-            'adjustment_type' => 'adjustment type',
-            'unit_cost' => 'unit cost'
+            'materials' => 'materials',
+            'materials.*.material_id' => 'material',
+            'materials.*.unit_cost' => 'unit cost',
+            'adjustment_type' => 'adjustment type'
         ];
     }
 }

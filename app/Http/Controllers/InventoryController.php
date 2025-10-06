@@ -60,7 +60,7 @@ class InventoryController extends Controller
                 $material = Material::find($item['material_id']);
 
                 $transaction = new InventoryTransaction([
-                    'type' => 'adjustment',
+                    'type' => $item['adjustment_type'],
                     'quantity' => $item['quantity'] * ($item['adjustment_type'] === 'add' ? 1 : -1),
                     'purchase_price' => $item['unit_cost'] ?? $material->purchase_price,
                     'user_id' => auth()->id(),

@@ -64,7 +64,7 @@ class MaterialController extends Controller
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
         $sheetData = $spreadsheet->getActiveSheet()->toArray();
         $headers = $sheetData[0];
-        $requiredHeaders = ['name', 'current_stock', 'stock_unit', 'recipe_unit', 'conversion_rate'];
+        $requiredHeaders = ['name', 'stock_unit', 'recipe_unit', 'conversion_rate'];
 
         if (array_diff($requiredHeaders, $headers)) {
             return response()->json([
@@ -76,7 +76,7 @@ class MaterialController extends Controller
                 $errors = [];
                 foreach (array_slice($sheetData, 1) as $index => $row) {
                     if (!empty($row[0])) {
-                        if (!empty($row[4]) && !is_numeric($row[4])) {
+                        if (!empty($row[3]) && !is_numeric($row[3])) {
                             $errors[] = "Conversion rate is not numeric in Row " . ($index + 2);
                             continue;
                         }
@@ -120,6 +120,9 @@ class MaterialController extends Controller
             'recipe_unit' => 'required|string',
             'conversion_rate' => 'required|numeric'
         ]);
+
+        $validatedData['purchase_price'] = 0;
+        $validatedData['quantity'] = 0;
 
         $material = Material::create($validatedData);
 
