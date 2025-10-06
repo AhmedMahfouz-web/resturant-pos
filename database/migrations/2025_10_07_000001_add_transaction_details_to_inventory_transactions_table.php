@@ -19,8 +19,8 @@ return new class extends Migration
         // Update the enum type to include new adjustment types
         DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment', 'increase', 'decrease', 'set')");
         
-        // Rename 'note' column to 'notes' if it exists
-        if (Schema::hasColumn('inventory_transactions', 'note')) {
+        // Rename 'note' column to 'notes' if it exists and 'notes' doesn't already exist
+        if (Schema::hasColumn('inventory_transactions', 'note') && !Schema::hasColumn('inventory_transactions', 'notes')) {
             Schema::table('inventory_transactions', function (Blueprint $table) {
                 $table->renameColumn('note', 'notes');
             });
