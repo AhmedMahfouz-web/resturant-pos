@@ -9,45 +9,49 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('inventory_transactions', function (Blueprint $table) {
-            // Add new columns for transaction details only if they don't exist
-            if (!Schema::hasColumn('inventory_transactions', 'old_quantity')) {
-                $table->decimal('old_quantity', 10, 2)->nullable()->after('unit_cost');
-            }
-            if (!Schema::hasColumn('inventory_transactions', 'new_quantity')) {
-                $table->decimal('new_quantity', 10, 2)->nullable()->after('old_quantity');
-            }
-            if (!Schema::hasColumn('inventory_transactions', 'adjustment_quantity')) {
-                $table->decimal('adjustment_quantity', 10, 2)->nullable()->after('new_quantity');
-            }
-        });
-
-        // Update the enum type to include new adjustment types
-        DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment', 'increase', 'decrease', 'set')");
-        
-        // Rename 'note' column to 'notes' if it exists and 'notes' doesn't already exist
-        if (Schema::hasColumn('inventory_transactions', 'note') && !Schema::hasColumn('inventory_transactions', 'notes')) {
+        if (Schema::hasTable('inventory_transactions')) {
             Schema::table('inventory_transactions', function (Blueprint $table) {
-                $table->renameColumn('note', 'notes');
+                // Add new columns for transaction details only if they don't exist
+                if (!Schema::hasColumn('inventory_transactions', 'old_quantity')) {
+                    $table->decimal('old_quantity', 10, 2)->nullable()->after('unit_cost');
+                }
+                if (!Schema::hasColumn('inventory_transactions', 'new_quantity')) {
+                    $table->decimal('new_quantity', 10, 2)->nullable()->after('old_quantity');
+                }
+                if (!Schema::hasColumn('inventory_transactions', 'adjustment_quantity')) {
+                    $table->decimal('adjustment_quantity', 10, 2)->nullable()->after('new_quantity');
+                }
             });
+
+            // Update the enum type to include new adjustment types
+            DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment', 'increase', 'decrease', 'set')");
+            
+            // Rename 'note' column to 'notes' if it exists and 'notes' doesn't already exist
+            if (Schema::hasColumn('inventory_transactions', 'note') && !Schema::hasColumn('inventory_transactions', 'notes')) {
+                Schema::table('inventory_transactions', function (Blueprint $table) {
+                    $table->renameColumn('note', 'notes');
+                });
+            }
         }
     }
 
     public function down()
     {
-        Schema::table('inventory_transactions', function (Blueprint $table) {
-            // Remove the added columns
-            $table->dropColumn(['old_quantity', 'new_quantity', 'adjustment_quantity']);
-        });
-
-        // Revert enum type back to original
-        DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment')");
-        
-        // Rename 'notes' back to 'note' if needed
-        if (Schema::hasColumn('inventory_transactions', 'notes')) {
+        if (Schema::hasTable('inventory_transactions')) {
             Schema::table('inventory_transactions', function (Blueprint $table) {
-                $table->renameColumn('notes', 'note');
+                // Remove the added columns
+                $table->dropColumn(['old_quantity', 'new_quantity', 'adjustment_quantity']);
             });
+
+            // Revert enum type back to original
+            DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment')");
+            
+            // Rename 'notes' back to 'note' if needed
+            if (Schema::hasColumn('inventory_transactions', 'notes')) {
+                Schema::table('inventory_transactions', function (Blueprint $table) {
+                    $table->renameColumn('notes', 'note');
+                });
+            }
         }
     }
 };

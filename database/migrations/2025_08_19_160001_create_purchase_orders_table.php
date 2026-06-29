@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
             $table->string('po_number')->unique();
-            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('supplier_id');
             $table->enum('status', [
                 'draft',
                 'pending',
@@ -38,8 +38,8 @@ return new class extends Migration
             $table->text('delivery_address')->nullable();
             $table->text('notes')->nullable();
 
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
 
             $table->timestamps();

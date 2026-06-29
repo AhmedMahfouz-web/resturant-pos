@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('supplier_performance_metrics', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('supplier_id');
             $table->date('metric_period'); // Start date of the period being measured
 
             // Order metrics
@@ -37,8 +37,8 @@ return new class extends Migration
             $table->timestamp('calculated_at');
             $table->timestamps();
 
-            $table->unique(['supplier_id', 'metric_period']);
-            $table->index(['supplier_id', 'overall_rating']);
+            $table->unique(['supplier_id', 'metric_period'], 'idx_supp_perf_metric_uniq');
+            $table->index(['supplier_id', 'overall_rating'], 'idx_supp_perf_rating');
         });
     }
 

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Material;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class MaterialSeeder extends Seeder
 {
@@ -26,7 +27,18 @@ class MaterialSeeder extends Seeder
             ['name' => 'Salt', 'purchase_price' => 1.00, 'quantity' => 1000, 'unit' => 'grams'],
         ];
 
+        $hasUnit = Schema::hasColumn('materials', 'unit');
+        $hasStockUnit = Schema::hasColumn('materials', 'stock_unit');
+
         foreach ($materials as $material) {
+            if ($hasStockUnit) {
+                $material['stock_unit'] = $material['unit'];
+                $material['recipe_unit'] = $material['unit'];
+                $material['conversion_rate'] = 1.0000;
+            }
+            if (!$hasUnit) {
+                unset($material['unit']);
+            }
             Material::create($material);
         }
     }

@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('material_receipts', function (Blueprint $table) {
-            $table->dropColumn('unit');
-        });
+        if (Schema::hasTable('material_receipts') && Schema::hasColumn('material_receipts', 'unit')) {
+            Schema::table('material_receipts', function (Blueprint $table) {
+                $table->dropColumn('unit');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('material_receipts', function (Blueprint $table) {
-            $table->string('unit')->after('quantity_received');
-        });
+        if (Schema::hasTable('material_receipts') && !Schema::hasColumn('material_receipts', 'unit')) {
+            Schema::table('material_receipts', function (Blueprint $table) {
+                $table->string('unit')->after('quantity_received');
+            });
+        }
     }
 };

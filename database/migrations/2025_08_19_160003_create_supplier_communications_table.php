@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('supplier_communications')) {
             Schema::create('supplier_communications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('supplier_id');
 
             $table->enum('communication_type', [
                 'inquiry',
@@ -37,7 +37,7 @@ return new class extends Migration
                 'online_chat'
             ]);
 
-            $table->foreignId('initiated_by')->constrained('users');
+            $table->unsignedBigInteger('initiated_by');
 
             // Response tracking
             $table->boolean('response_received')->default(false);
@@ -49,9 +49,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['supplier_id', 'communication_type']);
-            $table->index(['supplier_id', 'communication_date']);
-            $table->index(['response_received', 'communication_date']);
+            $table->index(['supplier_id', 'communication_type'], 'idx_supplier_comm_type');
+            $table->index(['supplier_id', 'communication_date'], 'idx_supplier_comm_date');
+            $table->index(['response_received', 'communication_date'], 'idx_response_comm_date');
             });
         }
     }

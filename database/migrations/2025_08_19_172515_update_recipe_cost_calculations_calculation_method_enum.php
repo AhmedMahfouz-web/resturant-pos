@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('recipe_cost_calculations', function (Blueprint $table) {
-            // Drop the old enum column and recreate with new values
-            $table->dropColumn('calculation_method');
-        });
+        if (Schema::hasTable('recipe_cost_calculations')) {
+            if (Schema::hasColumn('recipe_cost_calculations', 'calculation_method')) {
+                Schema::table('recipe_cost_calculations', function (Blueprint $table) {
+                    $table->dropColumn('calculation_method');
+                });
+            }
 
-        Schema::table('recipe_cost_calculations', function (Blueprint $table) {
-            $table->enum('calculation_method', ['purchase_price', 'fifo', 'average_cost'])->default('fifo')->after('cost_per_serving');
-        });
+            Schema::table('recipe_cost_calculations', function (Blueprint $table) {
+                $table->enum('calculation_method', ['purchase_price', 'fifo', 'average_cost'])->default('fifo')->after('cost_per_serving');
+            });
+        }
     }
 
     /**
@@ -26,12 +29,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('recipe_cost_calculations', function (Blueprint $table) {
-            $table->dropColumn('calculation_method');
-        });
+        if (Schema::hasTable('recipe_cost_calculations')) {
+            if (Schema::hasColumn('recipe_cost_calculations', 'calculation_method')) {
+                Schema::table('recipe_cost_calculations', function (Blueprint $table) {
+                    $table->dropColumn('calculation_method');
+                });
+            }
 
-        Schema::table('recipe_cost_calculations', function (Blueprint $table) {
-            $table->enum('calculation_method', ['average', 'fifo', 'lifo'])->default('fifo')->after('cost_per_serving');
-        });
+            Schema::table('recipe_cost_calculations', function (Blueprint $table) {
+                $table->enum('calculation_method', ['average', 'fifo', 'lifo'])->default('fifo')->after('cost_per_serving');
+            });
+        }
     }
 };
