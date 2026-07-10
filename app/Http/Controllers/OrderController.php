@@ -30,7 +30,7 @@ class OrderController extends Controller
         if (auth()->user()->can('old reciept')) {
             return response()->json(Order::with(['orderItems.product', 'user'])->latest()->paginate(10));
         } else {
-            $shift_id = Shift::select('id')->first();
+            $shift_id = Shift::select('id')->latest()->first();
             return response()->json(Order::where('shift_id', $shift_id->id)->with(['orderItems.product', 'user'])->latest()->paginate(10));
         }
     }
@@ -49,7 +49,7 @@ class OrderController extends Controller
             $orders = Order::where('status', 'canceled')->with(['orderItems.product', 'user'])->latest()->get();
             return response()->json($orders);
         } else {
-            $shift_id = Shift::select('id')->first();
+            $shift_id = Shift::select('id')->latest()->first();
             $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
             return response()->json($orders);
         }
@@ -62,7 +62,7 @@ class OrderController extends Controller
             $orders = Order::where('status', 'completed')->with(['orderItems.product', 'user'])->latest()->get();
             return response()->json($orders);
         } else {
-            $shift_id = Shift::select('id')->first();
+            $shift_id = Shift::select('id')->latest()->first();
             $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
             return response()->json($orders);
         }
