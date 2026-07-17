@@ -2,10 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\EnhancedInventoryController;
+use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialReceiptController;
-use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
@@ -17,15 +17,11 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\StockAlertController;
 use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\TableController;
-use App\Http\Controllers\WebSocketController;
-use App\Http\Controllers\InventoryDashboardController;
-use App\Http\Controllers\EnhancedInventoryController;
 use App\Http\Controllers\SupplierPerformanceController;
+use App\Http\Controllers\TableController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
-use Illuminate\Database\Events\TransactionCommitted;
-use Illuminate\Http\Request;
+use App\Http\Controllers\WebSocketController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,7 +34,6 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
 
 Route::post('login', [AuthController::class, 'login']);
 
@@ -167,19 +162,6 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::post('{shiftId}/close', [ShiftController::class, 'closeShift']);
     });
 
-    Route::prefix('dashboard')->group(function () {
-        Route::get('/sales', [ReportController::class, 'totalSalesThisMonth']);
-        Route::get('/orders', [ReportController::class, 'totalOrdersThisMonth']);
-        Route::get('/canceled-orders', [ReportController::class, 'totalCanceledOrders']);
-        Route::get('/average-order-value', [ReportController::class, 'averageOrderValue']);
-        Route::get('/unique-customers', [ReportController::class, 'uniqueCustomerCount']);
-        Route::get('/top-selling-products', [ReportController::class, 'topSellingProducts']);
-        Route::get('/daily-sales-trend', [ReportController::class, 'dailySalesTrend']);
-        Route::get('/payment-method-breakdown', [ReportController::class, 'paymentMethodBreakdown']);
-        Route::get('/inventory-levels', [ReportController::class, 'inventoryLevels']);
-        Route::get('/user-engagement', [ReportController::class, 'userEngagementMetrics']);
-    });
-
     Route::prefix('reports')->group(function () {
         Route::get('/sales', [ReportController::class, 'salesReport']);
         Route::get('/inventory', [ReportController::class, 'inventoryReport']);
@@ -206,14 +188,7 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
         Route::get('/waste-tracking', [ReportController::class, 'wasteReport']); // Waste tracking report
         Route::get('/cost-analysis-enhanced', [ReportController::class, 'costAnalysis']); // Enhanced cost analysis report
         Route::get('/profitability', [ReportController::class, 'profitability']); // Profitability report
-        Route::post('/export', [ReportController::class, 'exportReport']);        // Export report data
     });
-
-    // Route::prefix('inventory')->group(function () {
-    //     Route::post('/receipt', [InventoryController::class, 'storeReceipt']);
-    //     Route::post('/adjust', [InventoryController::class, 'adjustStock']);
-    //     Route::post('/history', [ReportController::class, 'transactionHistory']);
-    // });
 
     // Enhanced Inventory Management API Endpoints
     Route::prefix('inventory')->group(function () {
