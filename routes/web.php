@@ -14,8 +14,11 @@ use App\Http\Controllers\OrderController;
 |
 */
 
-Route::get('/test-websocket', function () {
-    return view('test-websocket');
-});
+if (app()->environment('local')) {
+    Route::get('/test-websocket', function () {
+        return view('test-websocket');
+    });
+}
 
-Route::get('/completed-orders-without-shift', [OrderController::class, 'getCompletedOrdersWithoutShift']);
+Route::get('/completed-orders-without-shift', [OrderController::class, 'getCompletedOrdersWithoutShift'])
+    ->middleware(['jwt', 'check.token.blacklist']);

@@ -21,6 +21,10 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         if ($request->has('login_code')) {
+            if (!config('tenant.allow_pin_login')) {
+                return response()->json(['error' => 'pin_login_disabled'], 403);
+            }
+
             // Find the user by login_code
             $user = User::where('login_code', $request->login_code)
                 ->select('first_name', 'last_name', 'username', 'id')

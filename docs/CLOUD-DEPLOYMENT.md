@@ -1,0 +1,38 @@
+# One backend deployment per restaurant
+
+The selected topology is one shared Nuxt deployment serving `{slug}.pos.example.com`, plus a separate Laravel deployment and MySQL database for each restaurant at `{slug}.api.example.com`. The domain names are examples; configure the real domains in DNS, TLS, backend environment, and frontend routing. The same reviewed backend release is deployed to every restaurant. Each deployment needs its own writable `storage` and `bootstrap/cache`, `.env`, DB user/database, `APP_KEY`, `JWT_SECRET`, and WebSocket process/port. Do not share a tenant's secrets or writable directories.
+
+## Provision one restaurant
+
+1. Create the frontend/backend DNS records and TLS certificates. Route only the assigned backend hostname to that restaurant's Laravel `public` directory. Forward the original `Host` header. Only configured reverse proxies should be trusted for forwarded headers.
+2. Create an empty MySQL database and a database user allowed to access only that database. Back up the DB and uploaded files separately for each restaurant.
+3. Deploy the reviewed release into a separate application directory. Create a private `.env` from [cloud-backend.env.example](cloud-backend.env.example). Set the real `APP_URL`, `TENANT_API_HOST` (hostname only), exact `FRONTEND_ORIGIN` (scheme and hostname, no trailing slash), DB credentials, and unique application/JWT/WebSocket secrets. Set `APP_DEBUG=false`.
+4. From that deployment directory, run `composer install --no-dev --optimize-autoloader`, `php artisan key:generate`, `php artisan jwt:secret`, `php artisan migrate --force`, `php artisan db:seed --class=RolesAndPermissionsSeeder --force`, `php artisan subscription:set-expiry YYYY-MM-DD`, and `php artisan restaurant:create-admin EMAIL USERNAME FIRST_NAME LAST_NAME`. The admin command prompts privately for a password and only works before any users exist. Then run `php artisan config:cache`. The expiry date is inclusive in UTC. Set it before allowing customer traffic; a missing record returns HTTP 503.
+5. Do **not** run the full `DatabaseSeeder` in production: `UserSeeder` creates a known `admin@admin.com` / `password` account and sample users. Add menu, tables, payment methods, and staff through the application after creating the administrator.
+6. Run this deployment's scheduler and any queue worker against its own environment/database. The default `QUEUE_CONNECTION=sync` avoids a separate queue worker initially; if using an asynchronous queue, give this tenant a separate worker and queue storage.
+7. If real-time events are needed, run a separate WebSocket server for this tenant on a private internal port, for example `php artisan websockets:serve --host=127.0.0.1 --port=6001` under a process manager. Give every deployment a different `PUSHER_PORT` on the same host and use that port in the command. Reverse proxy `/app` on the tenant backend hostname to that port over WSS/TLS. The public key may be common to the shared frontend when each tenant has a separate WebSocket server; the secret must be unique. Do not connect all deployments to one WebSocket app because current event channels have shared names.
+   Keep the package's `/laravel-websockets` dashboard private at the reverse proxy. If the subscription expires, stop that tenant's WebSocket process and scheduler/worker too; the HTTP expiry gate does not govern a direct WebSocket handshake or CLI job.
+8. Check login and a protected endpoint from the intended frontend origin; confirm the same endpoints fail for a wrong hostname, and that expired subscriptions return `subscription_expired` (HTTP 403). Confirm one restaurant cannot log in with another restaurant's token. Verify WebSocket events do not cross restaurant connections.
+
+## Renew or expire
+
+Run `php artisan subscription:set-expiry YYYY-MM-DD` in the **specific restaurant deployment**. It updates only that restaurant database. Access remains open throughout that UTC date and is blocked from 00:00 UTC the following day. The command is server-side only; there is no POS API route for changing the date. Database access by a restaurant operator must not include permission to edit the subscription table directly.
+
+An unavailable subscription table/database returns HTTP 503 and does not allow HTTP access. In production, a missing subscription row also returns HTTP 503; local development may run without a row until it is configured. A host mismatch returns HTTP 404. The global gate runs before `/api/login`, JWT, and route model binding. The legacy completed-orders web route now also requires JWT; the test WebSocket page is local-only.
+
+## Deploy updates and restore
+
+Deploy the same release to each restaurant, migrate each DB with `php artisan migrate --force`, and record success/failure per restaurant. Do not continue silently after a failed migration. Keep a per-restaurant DB and files backup before schema changes. To restore one restaurant, restore only its DB and files into its isolated deployment and verify the configured hostname/secrets. An expired subscription does not delete POS records.
+
+For an existing single-restaurant installation, back up its DB and files, deploy the release against that same DB, set its backend hostname and frontend origin, run migrations, set the subscription expiry, and then switch DNS. Keep its existing users; the first-admin command is for an empty new database only.
+
+For offboarding, stop the tenant's HTTP/worker/scheduler/WebSocket processes, remove its DNS and proxy routes, and archive or delete only that tenant's DB/files according to the agreed retention period. Revoke its application, JWT, and WebSocket secrets.
+
+## Contract for the frontend developer
+
+- One Nuxt deployment serves `{slug}.pos.example.com`. For a validated single-label slug, send API calls to `https://{slug}.api.example.com/api`. Do not allow arbitrary host input from a URL parameter, and do not keep the current localhost API URL in production.
+- The current UI offers a four-digit code login. The cloud backend disables this on production deployments by default (`pin_login_disabled`, HTTP 403), since that code is too short for a public Internet endpoint. Use the existing email/password login UI for cloud. `ALLOW_PIN_LOGIN=true` is an explicit operator opt-in only behind a trusted private network or equivalent access control.
+- The backend allows only its exact `FRONTEND_ORIGIN`. API authorization uses the Bearer JWT header, so browser credentials are not required. Handle `subscription_expired` (403) and `subscription_not_configured` / `subscription_unavailable` (503) without repeatedly redirecting to login.
+- The current frontend sends `Access-Control-Allow-Origin` as a request header. It is temporarily accepted for compatibility; remove it from frontend requests when making the cloud URL changes, since CORS response headers belong to the server.
+- Connect Echo to the matching tenant backend over WSS on port 443, using that deployment's public `PUSHER_APP_KEY`. The default frontend `wsPort: 6001` and `forceTLS: false` are development settings and cannot be used unchanged on HTTPS. If using private channels, send the Bearer token to that backend's `/broadcasting/auth` endpoint.
+- Receipt printing from a cloud page still needs the agreed local print bridge for restaurant printers. This backend deployment does not grant browsers direct access to LAN printer IPs.

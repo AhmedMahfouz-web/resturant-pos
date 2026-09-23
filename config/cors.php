@@ -14,20 +14,22 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'broadcasting/auth', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://192.168.1.90:3000', '*'],
-    'allowed_origins_patterns' => [':3000'],
+    'allowed_origins' => env('FRONTEND_ORIGIN')
+        ? [env('FRONTEND_ORIGIN')]
+        : (env('APP_ENV') === 'production' ? [] : ['*']),
+    'allowed_origins_patterns' => [],
     'allowed_headers' => [
         'Content-Type',
         'X-Requested-With',
         'Authorization',
         'X-CSRF-TOKEN',
-        'Access-Control-Allow-Origin'
+        'Access-Control-Allow-Origin',
     ],
 
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => true
+    'supports_credentials' => false
 
 ];

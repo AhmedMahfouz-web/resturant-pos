@@ -32,30 +32,30 @@ return [
 
         'pusher' => [
             'driver' => 'pusher',
-            'key' => "12345",
-            'secret' => "12345",
-            'app_id' => "12345",
+            'key' => env('PUSHER_APP_KEY', env('APP_ENV') === 'production' ? null : '12345'),
+            'secret' => env('PUSHER_APP_SECRET', env('APP_ENV') === 'production' ? null : '12345'),
+            'app_id' => env('PUSHER_APP_ID', env('APP_ENV') === 'production' ? null : '12345'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
-                'encrypted' => true,
-                'host' => '127.0.0.1',
-                'port' => 6001,
-                'scheme' => 'http'
+                'encrypted' => env('PUSHER_SCHEME', 'http') === 'https',
+                'host' => env('PUSHER_HOST', '127.0.0.1'),
+                'port' => env('PUSHER_PORT', 6001),
+                'scheme' => env('PUSHER_SCHEME', 'http'),
             ],
         ],
 
         'websockets' => [
             'driver' => 'pusher',
-    'key' => "12345",
-    'secret' => "12345",
-    'app_id' => "12345",
-    'options' => [
-        'cluster' => "mt1",
-        'useTLS' => false, // Use `false` for local WebSockets
-        'host' => '127.0.0.1',
-        'port' => 6001, // Laravel WebSockets default port
-        'scheme' => 'http', // Use `https` for SSL
-    ],
+            'key' => env('PUSHER_APP_KEY', env('APP_ENV') === 'production' ? null : '12345'),
+            'secret' => env('PUSHER_APP_SECRET', env('APP_ENV') === 'production' ? null : '12345'),
+            'app_id' => env('PUSHER_APP_ID', env('APP_ENV') === 'production' ? null : '12345'),
+            'options' => [
+                'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
+                'useTLS' => env('PUSHER_SCHEME', 'http') === 'https',
+                'host' => env('PUSHER_HOST', '127.0.0.1'),
+                'port' => env('PUSHER_PORT', 6001),
+                'scheme' => env('PUSHER_SCHEME', 'http'),
+            ],
         ],
 
         'ably' => [

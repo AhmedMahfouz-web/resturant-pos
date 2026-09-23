@@ -23,13 +23,13 @@ return [
      */
     'apps' => [
         [
-            'id' => "12345", // Matches PUSHER_APP_ID in .env
-            'name' => 'local',
-            'key' => "12345", // Matches PUSHER_APP_KEY in .env
-            'secret' => "12345", // Matches PUSHER_APP_SECRET in .env
+            'id' => env('PUSHER_APP_ID', env('APP_ENV') === 'production' ? null : '12345'),
+            'name' => env('TENANT_API_HOST', 'local'),
+            'key' => env('PUSHER_APP_KEY', env('APP_ENV') === 'production' ? null : '12345'),
+            'secret' => env('PUSHER_APP_SECRET', env('APP_ENV') === 'production' ? null : '12345'),
             'path' => '',
             'capacity' => null,
-            'enable_client_messages' => true,
+            'enable_client_messages' => false,
             'enable_statistics' => true,
         ],
     ],
@@ -47,9 +47,9 @@ return [
      * This array contains the hosts of which you want to allow incoming requests.
      * Leave this empty if you want to accept requests from all hosts.
      */
-    'allowed_origins' => [
-        //
-    ],
+    'allowed_origins' => env('FRONTEND_ORIGIN')
+        ? [parse_url(env('FRONTEND_ORIGIN'), PHP_URL_HOST) ?: 'invalid.invalid']
+        : (env('APP_ENV') === 'production' ? ['invalid.invalid'] : []),
 
     /*
      * The maximum request size in kilobytes that is allowed for an incoming WebSocket request.

@@ -28,29 +28,31 @@ Host the POS online for multiple restaurants. Give each restaurant a subdomain, 
 
 Option A is **lower implementation complexity** for the first few restaurants and **higher recurring deployment effort**. Option B is **higher implementation and security-review complexity** now and **lower repeated application deployment effort** as restaurant count grows. Exact server capacity depends on traffic, worker settings, and database size; it cannot be inferred from repository code alone.
 
-## Recommended rollout decision
+## Selected rollout decision
 
-For an initial release with a small number of restaurants, prefer **A with one versioned code release and automated per-customer configuration**. Each customer gets its own subdomain, database user/database, environment, secrets, and storage; avoid manual code copies. This fits the current Laravel code with fewer tenant-sensitive changes. Use a central operator-controlled customer registry for domain, status, and expiry if automatic provisioning and renewal are part of the product. The registry is not a restaurant's POS database.
+The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
 
-Move to B only when deployment/operating effort justifies its added isolation work. Database-per-restaurant is retained, so the data layout supports that later move. This recommendation is provisional until the owner selects the deployment and frontend model.
+The restaurant subscription expiry lives in its own database, as requested. The operator updates it through a server-side Artisan command, not a POS API route. A central billing/customer registry is outside this first implementation. Move to B only if later deployment/operating effort justifies its added isolation work.
 
 ## Requirements shared by either option
 
 1. Resolve the restaurant only from a validated host/subdomain supplied through a trusted proxy. Unknown hosts cannot reach POS data. Reserve an operator/admin host outside tenant routing.
 2. Keep one POS database and database user per restaurant. Never accept the DB name, tenant ID, or subscription status from a client request as authority.
-3. Define expiry as a restaurant subscription (`expires_at`, UTC), not an individual POS user's expiry. State the exact cutoff rule and return a stable API response for expired/suspended subscriptions, including on login. Do not expose renewal controls through restaurant-admin credentials.
+3. Define expiry as a restaurant subscription (`expires_on`, UTC date), not an individual POS user's expiry. The date is inclusive: access is blocked starting 00:00 UTC the next day. Return a stable API response for expired subscriptions, including on login. Do not expose renewal controls through restaurant-admin credentials.
 4. Bind JWTs to a restaurant or use a distinct signing secret per deployment. A token from restaurant A must fail at restaurant B even if user IDs match.
 5. Scope files, cache/permission state, jobs, notifications, scheduled commands, and WebSocket channels to one restaurant. Existing public broadcast channel names require review before sharing a WebSocket server.
 6. Configure cloud API/WebSocket origins and TLS for the chosen Nuxt topology. Remove localhost assumptions and use an explicit CORS origin policy. Browser receipt printing remains a separate local-printer-bridge concern.
 7. Provide a repeatable provisioning, renewal, migration, backup, restore, and offboarding procedure. A failed tenant migration must be visible and recoverable; do not silently mark a tenant ready.
 8. Existing single-restaurant installations need a documented migration path with backup and a clear domain/database assignment.
 
-## Option A implementation scope after approval
+## Selected implementation scope
 
-- Add the operator-controlled customer record and an expiry gate that covers all tenant API routes, including login. Define where the operator registry is hosted and how each deployment authenticates to it; do not let a restaurant admin edit expiry.
+- Add a one-row subscription table in each restaurant DB, a server-only command to set its expiry date, and an expiry gate for all tenant API routes, including login. A missing record fails closed in production; local development can proceed before subscription setup.
+- Require a configured API host in production and reject requests arriving on another host before querying POS data.
 - Parameterize per-customer deployment settings: host, DB credentials, JWT secret, app key, storage/cache namespace, broadcast configuration, and allowed frontend origin.
-- Provide a repeatable provisioning and renewal command/runbook. Run existing migrations and seeders per customer; do not create a new restaurant by copying a modified source tree.
-- Update the Nuxt API and WebSocket configuration according to the selected frontend topology.
+- Provide a repeatable provisioning and renewal runbook. Run existing migrations per customer; do not create a new restaurant by copying a modified source tree.
+- Provide a server-only first-admin command; never run production with the demo `UserSeeder` credentials. Disable the four-digit PIN login on public production endpoints by default.
+- Document the shared Nuxt frontend contract for its developer. Do not edit the frontend repository in this change.
 
 ## Option B additional implementation scope
 
@@ -62,14 +64,13 @@ Move to B only when deployment/operating effort justifies its added isolation wo
 ## Review and acceptance criteria for either implementation
 
 - Two restaurants with overlapping user/order IDs cannot read, authenticate to, receive broadcasts from, or modify each other's data.
-- Unknown host and expired/suspended restaurant cannot log in or call protected POS endpoints. A renewed restaurant resumes without changing POS records.
+- Unknown host and expired restaurant cannot log in or call protected POS endpoints. A renewed restaurant resumes without changing POS records.
 - Existing active restaurant behavior remains compatible with current order, payment, inventory, and receipt APIs.
 - Onboarding is repeatable without source edits; backup and restore target exactly one restaurant's POS DB and files.
 - The Nuxt frontend reaches its tenant's cloud API and WebSocket endpoint over TLS. Cross-origin requests are limited to intended origins.
 - The implementation diff is reviewed against this spec before deployment.
 
-## Decisions needed before implementation
+## Deployment details still chosen by the operator
 
-1. Deployment: A (separate application configuration per restaurant) or B (one shared application runtime).
-2. Frontend: one Nuxt deployment serving customer subdomains or a separate Nuxt deployment per customer.
-3. Domain layout and operational ownership of DNS/TLS, plus the subscription expiry cutoff and renewal workflow.
+1. Actual parent domains and DNS/TLS provider. Example topology: `{slug}.pos.example.com` on the shared frontend and `{slug}.api.example.com` on that restaurant's backend.
+2. Server/hosting provider, process manager, and backup location. This spec does not create live cloud resources without those details.
