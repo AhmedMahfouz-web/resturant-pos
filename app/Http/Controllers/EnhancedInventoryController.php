@@ -43,7 +43,7 @@ class EnhancedInventoryController extends Controller
             $totalStockValue = Material::with('availableStockBatches')
                 ->get()
                 ->sum(function ($material) {
-                    retuurrentStockValue();
+                    return $material->availableStockBatches->sum('total_value');
                 });
 
             $expiringBatchesCount = StockBatch::expiringWithin(7)->available()->count();

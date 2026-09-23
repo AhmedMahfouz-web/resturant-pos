@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\InsufficientStockException;
 use Carbon\Carbon;
 
 class StockBatch extends Model
@@ -186,44 +188,87 @@ class StockBatch extends Model
 
     public static function consumeForMaterial($materialId, $quantityNeeded)
     {
-        $batches = static::forMaterial($materialId)
-            ->available()
-            ->fifoOrder()
-            ->get();
+        if ($quantityNeeded <= 0) {
+            throw new \InvalidArgumentException('The quantity to consume must be greater than zero.');
+        }
 
-        $totalConsumed = 0;
-        $consumedBatches = [];
+        return DB::transaction(function () use ($materialId, $quantityNeeded) {
+            $material = Material::whereKey($materialId)->lockForUpdate()->firstOrFail();
+            $batches = static::forMaterial($materialId)
+                ->available()
+                ->fifoOrder()
+                ->lockForUpdate()
+                ->get();
 
-        foreach ($batches as $batch) {
-            if ($totalConsumed >= $quantityNeeded) {
-                break;
+            // Older installs tracked stock only on materials, while some later
+            // code changed the aggregate without updating its batches.
+            $batchQuantity = round((float) $batches->sum('remaining_quantity'), 3);
+            $materialQuantity = max(0, (float) $material->quantity);
+            $difference = round($materialQuantity - $batchQuantity, 3);
+
+            if ($difference > 0) {
+                static::create([
+                    'material_id' => $material->id,
+                    'batch_number' => 'OPEN-' . $material->id . '-' . now()->format('YmdHisv'),
+                    'quantity' => $difference,
+                    'remaining_quantity' => $difference,
+                    'unit_cost' => $material->purchase_price,
+                    'received_date' => '1900-01-01',
+                ]);
+                $batches = static::forMaterial($materialId)
+                    ->available()
+                    ->fifoOrder()
+                    ->lockForUpdate()
+                    ->get();
+            } elseif ($difference < 0) {
+                $excess = abs($difference);
+                foreach ($batches as $batch) {
+                    $reduction = min($excess, (float) $batch->remaining_quantity);
+                    $batch->decrement('remaining_quantity', $reduction);
+                    $excess = round($excess - $reduction, 3);
+                    if ($excess <= 0) {
+                        break;
+                    }
+                }
+                $batches = static::forMaterial($materialId)
+                    ->available()
+                    ->fifoOrder()
+                    ->lockForUpdate()
+                    ->get();
             }
 
-            $remainingNeeded = $quantityNeeded - $totalConsumed;
-            $consumeFromBatch = min($remainingNeeded, $batch->remaining_quantity);
+            $totalConsumed = 0;
+            $consumedBatches = [];
 
-            $batch->consume($consumeFromBatch);
+            foreach ($batches as $batch) {
+                if ($totalConsumed >= $quantityNeeded) {
+                    break;
+                }
 
-            $consumedBatches[] = [
-                'batch_id' => $batch->id,
-                'batch_number' => $batch->batch_number,
-                'quantity_consumed' => $consumeFromBatch,
-                'unit_cost' => $batch->unit_cost,
-                'total_cost' => $consumeFromBatch * $batch->unit_cost
+                $consumeFromBatch = min($quantityNeeded - $totalConsumed, (float) $batch->remaining_quantity);
+                $batch->consume($consumeFromBatch);
+
+                $consumedBatches[] = [
+                    'batch_id' => $batch->id,
+                    'batch_number' => $batch->batch_number,
+                    'quantity_consumed' => $consumeFromBatch,
+                    'unit_cost' => $batch->unit_cost,
+                    'total_cost' => $consumeFromBatch * $batch->unit_cost
+                ];
+
+                $totalConsumed += $consumeFromBatch;
+            }
+
+            if ($totalConsumed < $quantityNeeded) {
+                throw new InsufficientStockException("Insufficient stock. Needed: {$quantityNeeded}, Available: {$totalConsumed}");
+            }
+
+            return [
+                'total_consumed' => $totalConsumed,
+                'total_cost' => collect($consumedBatches)->sum('total_cost'),
+                'batches' => $consumedBatches
             ];
-
-            $totalConsumed += $consumeFromBatch;
-        }
-
-        if ($totalConsumed < $quantityNeeded) {
-            throw new \Exception("Insufficient stock. Needed: {$quantityNeeded}, Available: {$totalConsumed}");
-        }
-
-        return [
-            'total_consumed' => $totalConsumed,
-            'total_cost' => collect($consumedBatches)->sum('total_cost'),
-            'batches' => $consumedBatches
-        ];
+        });
     }
 
     public static function calculateFifoCost($materialId, $quantity)

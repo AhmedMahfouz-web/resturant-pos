@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Material;
 use App\Models\MaterialReceipt;
+use App\Models\InventoryTransaction;
 use App\Models\StockBatch;
 use App\Models\Supplier;
 use App\Models\User;
@@ -31,6 +32,7 @@ class MaterialReceiptEnhancedTest extends TestCase
     public function it_can_create_material_receipt_with_supplier()
     {
         $material = Material::factory()->create();
+        $initialQuantity = (float) $material->quantity;
         $supplier = Supplier::factory()->create();
 
         $receiptData = [
@@ -83,6 +85,24 @@ class MaterialReceiptEnhancedTest extends TestCase
             'unit_cost' => 5.50,
             'supplier_id' => $supplier->id
         ]);
+
+        $receipt = MaterialReceipt::where('material_id', $material->id)->firstOrFail();
+        app(\App\Services\InventoryService::class)->processReceipt($receipt);
+
+        $this->assertEquals($initialQuantity + 100, (float) $material->fresh()->quantity);
+        $this->assertSame(1, StockBatch::where('material_receipt_id', $receipt->id)->count());
+        $this->assertSame(1, InventoryTransaction::where('reference_type', 'material_receipt')
+            ->where('reference_id', $receipt->id)
+            ->count());
+    }
+
+    /** @test */
+    public function supplier_performance_routes_are_registered(): void
+    {
+        $routeUris = collect(app('router')->getRoutes()->getRoutes())
+            ->map(fn ($route) => $route->uri());
+
+        $this->assertContains('api/suppliers/performance/comparison', $routeUris);
     }
 
     /** @test */

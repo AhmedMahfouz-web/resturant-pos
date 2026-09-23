@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => 'mysql',
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -45,16 +45,10 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            // 'url' => "mysql://root:XEhehdxtzQXvXERadKUFSUaoWoLLOCPE@autorack.proxy.rlwy.net:38707/railway",
-            // 'host' => "resturant-pos.railway.internal",
-            // 'port' => "3306",
-            // 'database' => 'railway',
-            // 'username' => "root",
-            // 'password' => 'XEhehdxtzQXvXERadKUFSUaoWoLLOCPE',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABSE', 'sugar_rush'),
+            'database' => env('DB_DATABASE', 'sugar_rush'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD'),
             'unix_socket' => env('DB_SOCKET'),
@@ -71,17 +65,17 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => "postgres://default:O1ZsMvmn5qUa@ep-autumn-hat-a448vptm-pooler.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require",
-            'host' => "ep-autumn-hat-a448vptm-pooler.us-east-1.aws.neon.tech",
-            'port' => '5432',
-            'database' => "verceldb",
-            'username' => "default",
-            'password' => "O1ZsMvmn5qUa",
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
         'sqlsrv' => [

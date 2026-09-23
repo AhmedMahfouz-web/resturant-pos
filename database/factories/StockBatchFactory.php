@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Material;
-use App\Models\MaterialReceipt;
 use App\Models\StockBatch;
 use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -34,7 +33,7 @@ class StockBatchFactory extends Factory
             'received_date' => $this->faker->dateTimeBetween('-30 days', 'now'),
             'expiry_date' => $this->faker->optional(0.7)->dateTimeBetween('now', '+1 year'),
             'supplier_id' => Supplier::factory(),
-            'material_receipt_id' => MaterialReceipt::factory(),
+            'material_receipt_id' => null,
         ];
     }
 

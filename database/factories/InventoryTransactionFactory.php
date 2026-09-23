@@ -89,4 +89,4 @@ class InventoryTransactionFactory extends Factory
             ])
         ]);
     }
-}ser
+}

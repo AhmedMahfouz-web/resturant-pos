@@ -24,7 +24,9 @@ return new class extends Migration
             });
 
             // Update the enum type to include new adjustment types
-            DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment', 'increase', 'decrease', 'set')");
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment', 'increase', 'decrease', 'set')");
+            }
             
             // Rename 'note' column to 'notes' if it exists and 'notes' doesn't already exist
             if (Schema::hasColumn('inventory_transactions', 'note') && !Schema::hasColumn('inventory_transactions', 'notes')) {
@@ -44,7 +46,9 @@ return new class extends Migration
             });
 
             // Revert enum type back to original
-            DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment')");
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement("ALTER TABLE inventory_transactions MODIFY COLUMN type ENUM('receipt', 'consumption', 'adjustment')");
+            }
             
             // Rename 'notes' back to 'note' if needed
             if (Schema::hasColumn('inventory_transactions', 'notes')) {

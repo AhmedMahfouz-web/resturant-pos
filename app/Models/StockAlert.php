@@ -114,6 +114,33 @@ class StockAlert extends Model
         ]);
     }
 
+    /** Keep the legacy API field names while storing values in the schema columns. */
+    public function getCurrentQuantityAttribute()
+    {
+        return $this->current_value;
+    }
+
+    public function getThresholdQuantityAttribute()
+    {
+        return $this->threshold_value;
+    }
+
+    public function getSeverityAttribute(): string
+    {
+        if (in_array($this->alert_type, [self::ALERT_TYPE_OUT_OF_STOCK, self::ALERT_TYPE_EXPIRY_CRITICAL], true)) {
+            return 'high';
+        }
+
+        if ($this->alert_type === self::ALERT_TYPE_LOW_STOCK) {
+            return $this->threshold_value !== null
+                && $this->current_value <= ((float) $this->threshold_value / 2)
+                    ? 'high'
+                    : 'medium';
+        }
+
+        return $this->alert_type === self::ALERT_TYPE_EXPIRY_WARNING ? 'medium' : 'low';
+    }
+
     public function getPriorityAttribute()
     {
         $priorities = [

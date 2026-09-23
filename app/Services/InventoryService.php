@@ -19,33 +19,11 @@ class InventoryService
      */
     public function processReceipt(MaterialReceipt $receipt): void
     {
-        DB::transaction(function () use ($receipt) {
-            $material = $receipt->material;
-
-            // Convert received quantity to material's stock unit
-            $convertedQuantity = $receipt->convertToStockUnit();
-
-            // Update material quantity
-            $material->increment('quantity', $convertedQuantity);
-
-            // Create stock batch for FIFO tracking
-            StockBatch::createFromReceipt($receipt);
-
-            // Create inventory transaction
-            InventoryTransaction::create([
-                'material_id' => $receipt->material_id,
-                'type' => 'receipt',
-                'quantity' => $convertedQuantity,
-                'unit_cost' => $receipt->unit_cost,
-                'reference_type' => 'material_receipt',
-                'reference_id' => $receipt->id,
-                'user_id' => $receipt->received_by,
-                'notes' => "Material receipt: {$receipt->receipt_code}"
-            ]);
-
-            // Check and generate stock alerts
-            $this->checkStockLevelsForMaterial($material);
-        });
+        // Persisting the receipt fires MaterialReceipt's created hook, which is
+        // the single owner of stock, batch, and ledger posting.
+        if (!$receipt->exists) {
+            DB::transaction(fn () => $receipt->save());
+        }
     }
 
     /**
@@ -53,26 +31,7 @@ class InventoryService
      */
     public function processConsumption(Order $order): void
     {
-        DB::transaction(function () use ($order) {
-            // Get all recipes for products in the order
-            foreach ($order->orderItems as $orderItem) {
-                $product = $orderItem->product;
-                $recipe = $product->recipe;
-
-                if ($recipe && $recipe->recipeMaterials) {
-                    foreach ($recipe->recipeMaterials as $recipeMaterial) {
-                        $material = $recipeMaterial->material;
-                        $quantityNeeded = $recipeMaterial->pivot->quantity * $orderItem->quantity;
-
-                        // Convert recipe quantity to stock unit
-                        $stockQuantityNeeded = $quantityNeeded * $material->conversion_rate;
-
-                        // Consume stock using FIFO
-                        $this->consumeStock($material, $stockQuantityNeeded, "Order #{$order->id}");
-                    }
-                }
-            }
-        });
+        $order->processInventoryConsumption();
     }
 
     /**

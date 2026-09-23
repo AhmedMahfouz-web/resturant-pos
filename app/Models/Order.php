@@ -9,6 +9,8 @@ use App\Models\InventoryTransaction;
 use App\Models\RecipeCostCalculation;
 use App\Models\StockAlert;
 use App\Models\Material;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\InsufficientStockException;
 
 class Order extends Model
 {
@@ -97,34 +99,40 @@ class Order extends Model
      */
     public function processInventoryConsumption()
     {
-        $consumptionLog = [];
-        $errors = [];
+        return DB::transaction(function () {
+            $consumptionLog = [];
+            $errors = [];
+            $hasInsufficientStock = false;
 
-        foreach ($this->orderItems as $item) {
-            try {
-                $itemConsumption = $this->processOrderItemConsumption($item);
-                $consumptionLog[] = $itemConsumption;
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'order_item_id' => $item->id,
-                    'product_name' => $item->product->name,
-                    'error' => $e->getMessage()
-                ];
+            foreach ($this->orderItems as $item) {
+                try {
+                    $itemConsumption = $this->processOrderItemConsumption($item);
+                    $consumptionLog[] = $itemConsumption;
+                } catch (\Exception $e) {
+                    $hasInsufficientStock = $hasInsufficientStock || $e instanceof InsufficientStockException;
+                    $errors[] = [
+                        'order_item_id' => $item->id,
+                        'product_name' => $item->product->name,
+                        'error' => $e->getMessage()
+                    ];
+                }
             }
-        }
 
-        // Log the consumption summary
-        $this->logInventoryConsumption($consumptionLog, $errors);
+            $this->logInventoryConsumption($consumptionLog, $errors);
 
-        // Broadcast inventory processing completion
-        $broadcastService = app(\App\Services\InventoryBroadcastService::class);
-        $broadcastService->broadcastOrderInventoryProcessed($this, $consumptionLog);
+            $broadcastService = app(\App\Services\InventoryBroadcastService::class);
+            $broadcastService->broadcastOrderInventoryProcessed($this, $consumptionLog);
 
-        if (!empty($errors)) {
-            throw new \Exception('Some items could not be processed: ' . json_encode($errors));
-        }
+            if (!empty($errors)) {
+                if ($hasInsufficientStock) {
+                    throw new InsufficientStockException('Some items could not be processed: ' . json_encode($errors));
+                }
 
-        return $consumptionLog;
+                throw new \Exception('Some items could not be processed: ' . json_encode($errors));
+            }
+
+            return $consumptionLog;
+        });
     }
 
     /**
@@ -135,6 +143,19 @@ class Order extends Model
         $product = $item->product;
         $itemQuantity = $item->quantity;
         $materialConsumptions = [];
+
+        if (InventoryTransaction::where('reference_type', OrderItem::class)
+            ->where('reference_id', $item->id)
+            ->where('type', 'consumption')
+            ->exists()) {
+            return [
+                'order_item_id' => $item->id,
+                'product_name' => $product->name,
+                'quantity' => $itemQuantity,
+                'materials' => [],
+                'message' => 'Inventory already consumed for this order item'
+            ];
+        }
 
         // Get the recipe for this product
         $recipe = $product->recipe()->first();
@@ -187,6 +208,10 @@ class Order extends Model
                     'transaction_id' => $transaction->id
                 ];
             } catch (\Exception $e) {
+                if ($e instanceof InsufficientStockException) {
+                    throw $e;
+                }
+
                 throw new \Exception("Failed to consume {$material->name}: " . $e->getMessage());
             }
         }
@@ -293,14 +318,7 @@ class Order extends Model
             try {
                 $material = Material::find($materialId);
                 if ($material && $material->quantity <= $material->reorder_point) {
-                    StockAlert::create([
-                        'material_id' => $materialId,
-                        'alert_type' => 'low_stock',
-                        'current_quantity' => $material->quantity,
-                        'threshold_quantity' => $material->reorder_point,
-                        'message' => "Low stock alert triggered by order #{$this->code}",
-                        'severity' => $material->quantity <= ($material->reorder_point * 0.5) ? 'high' : 'medium'
-                    ]);
+                    StockAlert::createLowStockAlert($material);
                 }
             } catch (\Exception $e) {
                 \Log::warning("Failed to generate stock alert for material {$materialId}", [

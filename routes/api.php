@@ -84,8 +84,8 @@ Route::middleware(['jwt', 'check.token.blacklist'])->group(function () {
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);                    // Get all orders
         Route::get('/live', [OrderController::class, 'liveOrders']);           // Get live orders
-        Route::get('/completed', [OrderController::class, 'completedOrder']);  // Get completed orders
-        Route::get('/canceled', [OrderController::class, 'canceledOrder']);    // Get canceled orders
+        Route::get('/completed', [OrderController::class, 'completedOrders']); // Get completed orders
+        Route::get('/canceled', [OrderController::class, 'canceledOrders']);   // Get canceled orders
         Route::get('/show/{id}', [OrderController::class, 'show']);            // Show Specific order
         Route::post('/', [OrderController::class, 'createOrder']);             // Create a new order
         Route::post('/{id}/discount', [OrderController::class, 'discount']);   // Update an order

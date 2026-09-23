@@ -137,16 +137,7 @@ class InventoryBroadcastService
                 ->first();
 
             if (!$existingAlert) {
-                $alert = StockAlert::create([
-                    'material_id' => $material->id,
-                    'alert_type' => 'low_stock',
-                    'current_quantity' => $material->quantity,
-                    'threshold_quantity' => $material->reorder_point,
-                    'message' => "Low stock alert: {$material->name} is below reorder point",
-                    'severity' => $material->quantity <= ($material->reorder_point * 0.5) ? 'high' : 'medium'
-                ]);
-
-                $this->broadcastStockAlert($alert);
+                StockAlert::createLowStockAlert($material);
             }
         }
 
@@ -158,16 +149,7 @@ class InventoryBroadcastService
                 ->first();
 
             if (!$existingAlert) {
-                $alert = StockAlert::create([
-                    'material_id' => $material->id,
-                    'alert_type' => 'overstock',
-                    'current_quantity' => $material->quantity,
-                    'threshold_quantity' => $material->maximum_stock_level,
-                    'message' => "Overstock alert: {$material->name} exceeds maximum stock level",
-                    'severity' => 'low'
-                ]);
-
-                $this->broadcastStockAlert($alert);
+                StockAlert::createOverstockAlert($material);
             }
         }
     }

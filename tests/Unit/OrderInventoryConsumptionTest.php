@@ -69,7 +69,7 @@ class OrderInventoryConsumptionTest extends TestCase
     {
         $order = Order::factory()->create([
             'user_id' => $this->user->id,
-            'status' => 'pending',
+            'status' => 'live',
             'code' => 'ORD-001'
         ]);
 
@@ -81,6 +81,7 @@ class OrderInventoryConsumptionTest extends TestCase
 
         // Complete the order
         $order->update(['status' => 'completed']);
+        $order->processInventoryConsumption();
 
         // Check that inventory transactions were created
         $this->assertDatabaseHas('inventory_transactions', [
@@ -104,7 +105,7 @@ class OrderInventoryConsumptionTest extends TestCase
 
         $order = Order::factory()->create([
             'user_id' => $this->user->id,
-            'status' => 'pending',
+            'status' => 'live',
             'code' => 'ORD-002'
         ]);
 
@@ -121,6 +122,90 @@ class OrderInventoryConsumptionTest extends TestCase
         $this->assertDatabaseMissing('inventory_transactions', [
             'reference_type' => OrderItem::class,
             'reference_id' => $order->orderItems->first()->id
+        ]);
+    }
+
+    /** @test */
+    public function it_reconciles_legacy_stock_without_batches_before_consumption()
+    {
+        $material = Material::factory()->create([
+            'quantity' => 10,
+            'stock_unit' => 'kg',
+            'recipe_unit' => 'kg',
+            'conversion_rate' => 1,
+        ]);
+        $recipe = Recipe::factory()->create();
+        $recipe->recipeMaterials()->attach($material->id, ['material_quantity' => 2]);
+        $product = Product::factory()->create();
+        $product->recipes()->attach($recipe->id);
+        $order = Order::factory()->create([
+            'user_id' => $this->user->id,
+            'status' => 'live',
+            'code' => 'ORD-003',
+        ]);
+        $item = OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ]);
+
+        $order->update(['status' => 'completed']);
+
+        $this->assertEquals(6.0, (float) $material->fresh()->quantity);
+        $this->assertEquals(6.0, (float) StockBatch::where('material_id', $material->id)->sum('remaining_quantity'));
+        $this->assertSame(1, StockBatch::where('material_id', $material->id)
+            ->where('batch_number', 'like', 'OPEN-' . $material->id . '-%')
+            ->count());
+        $this->assertDatabaseHas('inventory_transactions', [
+            'material_id' => $material->id,
+            'reference_type' => OrderItem::class,
+            'reference_id' => $item->id,
+            'quantity' => 4,
+        ]);
+    }
+
+    /** @test */
+    public function insufficient_stock_rolls_back_all_item_consumption_and_order_completion()
+    {
+        $secondMaterial = Material::factory()->create([
+            'quantity' => 1,
+            'stock_unit' => 'kg',
+            'recipe_unit' => 'kg',
+            'conversion_rate' => 1,
+        ]);
+        StockBatch::factory()->create([
+            'material_id' => $secondMaterial->id,
+            'quantity' => 1,
+            'remaining_quantity' => 1,
+        ]);
+        $this->recipe->recipeMaterials()->attach($secondMaterial->id, ['material_quantity' => 2]);
+
+        $order = Order::factory()->create([
+            'user_id' => $this->user->id,
+            'status' => 'live',
+            'code' => 'ORD-004',
+        ]);
+        $item = OrderItem::factory()->create([
+            'order_id' => $order->id,
+            'product_id' => $this->product->id,
+            'quantity' => 1,
+        ]);
+
+        try {
+            $order->update(['status' => 'completed']);
+            $this->fail('Insufficient stock should prevent order completion.');
+        } catch (\Exception $exception) {
+            $this->assertStringContainsString('Insufficient stock', $exception->getMessage());
+        }
+
+        $this->assertSame('live', $order->fresh()->status);
+        $this->assertEquals(10.0, (float) $this->material->fresh()->quantity);
+        $this->assertEquals(10.0, (float) StockBatch::where('material_id', $this->material->id)->sum('remaining_quantity'));
+        $this->assertEquals(1.0, (float) $secondMaterial->fresh()->quantity);
+        $this->assertDatabaseMissing('inventory_transactions', [
+            'reference_type' => OrderItem::class,
+            'reference_id' => $item->id,
+            'type' => 'consumption',
         ]);
     }
 }

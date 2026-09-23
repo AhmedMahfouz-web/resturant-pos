@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\DecrementMaterials;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -27,12 +26,7 @@ class OrderController extends Controller
     // Get all orders
     public function index()
     {
-        if (auth()->user()->can('old reciept')) {
-            return response()->json(Order::with(['orderItems.product', 'user'])->latest()->paginate(10));
-        } else {
-            $shift_id = Shift::select('id')->latest()->first();
-            return response()->json(Order::where('shift_id', $shift_id->id)->with(['orderItems.product', 'user'])->latest()->paginate(10));
-        }
+        return response()->json($this->orderHistory()->paginate(10));
     }
 
     // Get live orders
@@ -45,27 +39,29 @@ class OrderController extends Controller
     // Get canceled orders
     public function canceledOrders()
     {
-        if (auth()->user()->can('old reciept')) {
-            $orders = Order::where('status', 'canceled')->with(['orderItems.product', 'user'])->latest()->get();
-            return response()->json($orders);
-        } else {
-            $shift_id = Shift::select('id')->latest()->first();
-            $orders = Order::where(['status' => 'canceled', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
-            return response()->json($orders);
-        }
+        return response()->json($this->orderHistory('canceled')->paginate(10));
     }
 
     // Get completed orders
     public function completedOrders()
     {
-        if (auth()->user()->can('old reciept')) {
-            $orders = Order::where('status', 'completed')->with(['orderItems.product', 'user'])->latest()->get();
-            return response()->json($orders);
-        } else {
-            $shift_id = Shift::select('id')->latest()->first();
-            $orders = Order::where(['status' => 'completed', 'shift_id' => $shift_id])->with(['orderItems.product', 'user'])->latest()->take(100)->get();
-            return response()->json($orders);
+        return response()->json($this->orderHistory('completed')->paginate(10));
+    }
+
+    private function orderHistory(?string $status = null)
+    {
+        $query = Order::with(['orderItems.product', 'user'])->latest();
+
+        if ($status) {
+            $query->where('status', $status);
         }
+
+        if (!auth()->user()->can('old reciept')) {
+            $shiftId = Shift::latest()->value('id');
+            $query->where('shift_id', $shiftId ?? 0);
+        }
+
+        return $query;
     }
 
     // Create a new order
@@ -141,26 +137,27 @@ class OrderController extends Controller
     // Delete an order
     public function cancelOrder($id, Request $request)
     {
-        $order = Order::findOrFail($id);
-
-        // Validate the request for reasons
-        $request->validate([
+        $validated = $request->validate([
             'reason' => 'nullable|string|max:255',
             'manual_reason' => 'nullable|string|max:255',
+            'waste' => 'sometimes|boolean',
         ]);
 
-        // Update the order with cancellation details
-        $order->update([
-            'status' => 'canceled',
-            'reason' => $request->reason,
-            'manual_reason' => $request->manual_reason,
-        ]);
+        return DB::transaction(function () use ($id, $validated, $request) {
+            $order = Order::lockForUpdate()->findOrFail($id);
 
-        if (!empty($request->waste)) {
-            DecrementMaterials::dispatch($order);
-        }
+            if ($order->status === 'live' && $request->boolean('waste')) {
+                $order->load(['orderItems.product'])->processInventoryConsumption();
+            }
 
-        return response()->json(['message' => 'Order canceled successfully']);
+            $order->update([
+                'status' => 'canceled',
+                'reason' => $validated['reason'] ?? null,
+                'manual_reason' => $validated['manual_reason'] ?? null,
+            ]);
+
+            return response()->json(['message' => 'Order canceled successfully']);
+        });
     }
 
     // Add discount to order
