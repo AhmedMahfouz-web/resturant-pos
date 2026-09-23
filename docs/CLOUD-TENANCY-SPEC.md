@@ -32,6 +32,8 @@ Option A is **lower implementation complexity** for the first few restaurants an
 
 The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. The frontend has the fixed origin `https://maresto.eminent-studio.com`; a restaurant backend uses `https://cafename.eminent-studio.com`, replacing `cafename` with its assigned slug. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
 
+The frontend selection flow is also decided: read the restaurant slug from browser `localStorage`; if absent, show a popup asking for the slug. Validate and normalize the slug, save it, and direct API/WebSocket traffic to that restaurant backend. Changing the slug must clear the current user's token and restaurant-specific client state before another login.
+
 The restaurant subscription expiry lives in its own database, as requested. The operator updates it through a server-side Artisan command, not a POS API route. A central billing/customer registry is outside this first implementation. Move to B only if later deployment/operating effort justifies its added isolation work.
 
 ## Requirements shared by either option
@@ -68,9 +70,9 @@ The restaurant subscription expiry lives in its own database, as requested. The 
 - Existing active restaurant behavior remains compatible with current order, payment, inventory, and receipt APIs.
 - Onboarding is repeatable without source edits; backup and restore target exactly one restaurant's POS DB and files.
 - The Nuxt frontend reaches its tenant's cloud API and WebSocket endpoint over TLS. Cross-origin requests are limited to intended origins.
+- A browser with no saved slug shows the restaurant popup before making POS requests; a saved valid slug selects the matching backend. Invalid slugs are rejected, and changing restaurants clears the previous token and cached POS state.
 - The implementation diff is reviewed against this spec before deployment.
 
 ## Deployment details still chosen by the operator
 
-1. How the fixed frontend URL selects the restaurant before login: a path, a restaurant-name input, or a customer-specific invitation link. The frontend must validate the slug and keep API/WebSocket destinations and token/state storage tied to that slug.
-2. DNS/TLS provider, server/hosting provider, process manager, and backup location. This spec does not create live cloud resources without those details.
+1. DNS/TLS provider, server/hosting provider, process manager, and backup location. This spec does not create live cloud resources without those details.
