@@ -30,7 +30,7 @@ Option A is **lower implementation complexity** for the first few restaurants an
 
 ## Selected rollout decision
 
-The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. The frontend has the fixed origin `https://maresto.eminent-studio.com`; a restaurant backend uses `https://cafename.eminent-studio.com`, replacing `cafename` with its assigned slug. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
+The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. The frontend has the fixed origin `https://maresto.eminent-studio.com`; a restaurant backend uses `https://cafename.maresto.eminent-studio.com`, replacing `cafename` with its assigned slug. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
 
 The frontend selection flow is also decided: read the restaurant slug from browser `localStorage`; if absent, show a popup asking for the slug. Validate and normalize the slug, save it, and direct API/WebSocket traffic to that restaurant backend. Changing the slug must clear the current user's token and restaurant-specific client state before another login.
 
