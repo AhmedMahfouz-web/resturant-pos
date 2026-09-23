@@ -30,7 +30,7 @@ Option A is **lower implementation complexity** for the first few restaurants an
 
 ## Selected rollout decision
 
-The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
+The owner selected **A: a separate backend deployment, subdomain, and database per restaurant**, with **one shared Nuxt frontend deployment**. The frontend has the fixed origin `https://maresto.eminent-studio.com`; a restaurant backend uses `https://cafename.eminent-studio.com`, replacing `cafename` with its assigned slug. Keep all backend deployments on the same versioned release; each deployment has its own environment, database user/database, app/JWT secrets, storage, and worker/WebSocket process. Do not manually edit or copy a divergent source tree per customer.
 
 The restaurant subscription expiry lives in its own database, as requested. The operator updates it through a server-side Artisan command, not a POS API route. A central billing/customer registry is outside this first implementation. Move to B only if later deployment/operating effort justifies its added isolation work.
 
@@ -49,7 +49,7 @@ The restaurant subscription expiry lives in its own database, as requested. The 
 
 - Add a one-row subscription table in each restaurant DB, a server-only command to set its expiry date, and an expiry gate for all tenant API routes, including login. A missing record fails closed in production; local development can proceed before subscription setup.
 - Require a configured API host in production and reject requests arriving on another host before querying POS data.
-- Parameterize per-customer deployment settings: host, DB credentials, JWT secret, app key, storage/cache namespace, broadcast configuration, and allowed frontend origin.
+- Parameterize per-customer deployment settings: host, DB credentials, JWT secret, app key, storage/cache namespace, and broadcast configuration. Every backend allows the same exact frontend origin, `https://maresto.eminent-studio.com`.
 - Provide a repeatable provisioning and renewal runbook. Run existing migrations per customer; do not create a new restaurant by copying a modified source tree.
 - Provide a server-only first-admin command; never run production with the demo `UserSeeder` credentials. Disable the four-digit PIN login on public production endpoints by default.
 - Document the shared Nuxt frontend contract for its developer. Do not edit the frontend repository in this change.
@@ -72,5 +72,5 @@ The restaurant subscription expiry lives in its own database, as requested. The 
 
 ## Deployment details still chosen by the operator
 
-1. Actual parent domains and DNS/TLS provider. Example topology: `{slug}.pos.example.com` on the shared frontend and `{slug}.api.example.com` on that restaurant's backend.
-2. Server/hosting provider, process manager, and backup location. This spec does not create live cloud resources without those details.
+1. How the fixed frontend URL selects the restaurant before login: a path, a restaurant-name input, or a customer-specific invitation link. The frontend must validate the slug and keep API/WebSocket destinations and token/state storage tied to that slug.
+2. DNS/TLS provider, server/hosting provider, process manager, and backup location. This spec does not create live cloud resources without those details.
