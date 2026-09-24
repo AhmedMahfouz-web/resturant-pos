@@ -10,7 +10,9 @@ This is a design specification for the next implementation; the current branch d
 
 - **Restaurant** is the paying customer and deployment/database boundary. Subscription expiry applies to the restaurant, not each branch.
 - **Branch** is a physical operating location inside the restaurant database. It has a stable ID and name. One restaurant starts with one default branch and may add more.
-- The product/menu catalog can be shared at restaurant level, but **price and availability vary by branch**. An order records the price actually charged so later catalog changes cannot rewrite sales history.
+- Each branch has authorized users, shifts, tables, its own menu offering/prices, stock, purchases, sales, and operating expenses. The restaurant owner has an authorized view across branches.
+- Each shift belongs to exactly one branch. Each order belongs to one shift and therefore one branch; the order also keeps an immutable `branch_id` for direct filtering and reporting. Its shift, table, staff user, products, and stock effects must be valid for that same branch.
+- The product definitions may be shared at restaurant level, but **each branch controls which products appear on its menu, their prices, and availability**. An order records the price actually charged so later menu changes cannot rewrite sales history.
 - Stock is physically held by a branch. A material balance, FIFO batch, receipt, adjustment, consumption, alert, and stock report must belong to or be resolved for a branch. Transfers between branches require an explicit outgoing/incoming record; they cannot be simulated by changing one global material quantity.
 - Owner/authorized head-office reporting can choose one branch or all branches. The all-branch view must aggregate from branch-attributed facts, not from a second duplicated ledger.
 - The owner also requires expense entry and a profit view for each branch and the restaurant overall. The existing POS has no general expense ledger, so this is new financial work rather than a filter on existing reports.
@@ -30,11 +32,11 @@ This is a design specification for the next implementation; the current branch d
 ## Required data model
 
 1. Add `branches` with a unique restaurant-local code/name as appropriate and an active flag. Never delete a branch that has historical transactions; deactivate it.
-2. Attribute each operational fact to a branch at its source. At minimum: shifts, orders, tables, stock locations/balances, batches, receipts, stock adjustments and transactions. Payments and order items may inherit branch through their immutable order, but reports must join through that order consistently.
-3. Store branch-specific product offering/price/availability separately from the restaurant-level product definition. Keep historical order-item price snapshots.
+2. Attribute each operational fact to a branch at its source. At minimum: shifts, orders, tables, stock locations/balances, batches, purchase orders, receipts, stock adjustments and transactions. `orders.branch_id` must equal its shift's branch and be immutable after creation. Payments and order items may inherit branch through their immutable order, but reports must join through that order consistently.
+3. Store branch-specific menu membership/price/availability separately from the restaurant-level product definition. Branch A may offer a product that branch B does not. Keep historical order-item price snapshots.
 4. Represent stock by material **and branch**. FIFO consumption must select only that branch's batches. Cross-branch transfers must move quantity and cost between two branch ledgers atomically.
    A refund or reversal uses the original order's branch; changing the active branch cannot move historical sale or stock effects.
-5. Represent which branches a user can operate. The server validates the active branch against those assignments on every branch-scoped request. A restaurant-wide role can view approved aggregate reports; possession of a branch ID in browser storage or a request is never authorization.
+5. Assign operational users to the branches where they work. The server validates the active branch against those assignments on every branch-scoped request. A restaurant-wide owner/authorized role can view approved aggregate reports; possession of a branch ID in browser storage or a request is never authorization.
 6. Keep the subscription and restaurant JWT boundary from [CLOUD-TENANCY-SPEC.md](CLOUD-TENANCY-SPEC.md). A token from another restaurant still fails before branch authorization.
 7. Record operating expenses with category, amount, incurred date, branch or restaurant-wide scope, and who posted them. Posted expense corrections use an auditable reversal/adjustment rather than silently deleting history. Restaurant-wide overhead is shown separately; do not invent branch allocations without an agreed rule.
 
@@ -49,6 +51,7 @@ This is a design specification for the next implementation; the current branch d
 
 - After restaurant selection and login, the UI displays the user's permitted branches. A user with one branch may enter it directly; a user with several selects one. The branch choice may be stored in the browser for convenience, but the backend verifies it for every operation.
 - Operational APIs use exactly one authorized active branch. The backend derives that scope once per request and applies it to all reads, writes, payments, shifts, inventory, and real-time events. An order/table/shift/payment ID from another branch must be rejected even if it exists in the same DB.
+- Order creation checks that the chosen shift, table (for dine-in), staff user, and every offered product belong to the active branch. Payment and refund always use the order's original branch; the request cannot reassign an order to a different shift/branch later.
 - Head-office reports accept an authorized branch filter or an explicit all-branch mode. Return per-branch metrics plus the restaurant total over the same date range and calculation rules.
 - Branch-specific prices and availability are read at order creation and validated again server-side. A client-supplied price or branch ID must not decide the charged amount or bypass branch permission.
 
@@ -63,6 +66,7 @@ This is a design specification for the next implementation; the current branch d
 ## Acceptance criteria
 
 - Two branches can have open shifts and table `1` at the same time. Closing one branch's shift leaves the other branch's shift and users active.
+- Every order has one branch and a shift from that same branch. A branch A employee cannot create an order with branch B's shift/table or sell a product unavailable in A.
 - A staff member cannot read or mutate another branch's order, payment, table, or inventory by changing an ID or request parameter.
 - A sale in branch A decreases only branch A's FIFO batches and balance. An insufficient balance in A cannot use stock held in B.
 - Moving stock from A to B records matching outbound and inbound effects without counting the transfer as restaurant revenue.
