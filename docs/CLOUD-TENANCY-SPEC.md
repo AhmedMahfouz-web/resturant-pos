@@ -36,6 +36,8 @@ The frontend selection flow is also decided: read the restaurant slug from brows
 
 The restaurant subscription expiry lives in its own database, as requested. The operator updates it through a server-side Artisan command, not a POS API route. A central billing/customer registry is outside this first implementation. Move to B only if later deployment/operating effort justifies its added isolation work.
 
+Multiple physical branches of one restaurant stay inside that restaurant's database and backend subdomain. Their operational isolation and restaurant-wide reports are specified separately in [MULTI-BRANCH-SPEC.md](MULTI-BRANCH-SPEC.md).
+
 ## Requirements shared by either option
 
 1. Resolve the restaurant only from a validated host/subdomain supplied through a trusted proxy. Unknown hosts cannot reach POS data. Reserve an operator/admin host outside tenant routing.
